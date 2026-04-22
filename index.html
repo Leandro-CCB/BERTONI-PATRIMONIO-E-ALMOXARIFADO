@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sistema de Controle</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #f5f6fa;
+  --border: #e2e6ef;
+  --blue: #2563eb;
+  --blue-soft: rgba(37,99,235,0.10);
+  --orange: #ea6c1a;
+  --orange-soft: rgba(234,108,26,0.10);
+  --green: #16a34a;
+  --green-soft: rgba(22,163,74,0.10);
+  --red: #dc2626;
+  --red-soft: rgba(220,38,38,0.10);
+  --yellow: #d97706;
+  --yellow-soft: rgba(217,119,6,0.12);
+  --text: #1a1f36;
+  --text2: #4a5568;
+  --text3: #9aa5b4;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 16px rgba(0,0,0,0.10);
+  --header-grad: linear-gradient(135deg, #e8631a 0%, #f59e0b 100%);
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); padding: 0; }
+
+/* ── TOP BAR ── */
+.topbar { background: var(--header-grad); border-bottom: none; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(234,108,26,0.25); }
+.topbar-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; font-weight: 700; color: #ffffff; letter-spacing: -0.3px; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+.topbar-title span { color: rgba(255,255,255,0.85); }
+.sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: rgba(255,255,255,0.9); font-weight: 600; }
+.sync-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 6px #4ade80; }
+.sync-dot.syncing { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; animation: pulse 1s infinite; }
+.sync-dot.error { background: #f87171; box-shadow: 0 0 6px #f87171; }
+
+/* ── LOADING OVERLAY ── */
+#loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.85); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+#loading-overlay .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-overlay p { font-size: 0.9rem; color: var(--text2); font-weight: 500; }
+#loading-overlay.hidden { display: none; }
+
+/* ── ALERT BANNER ── */
+.alert-banner { background: linear-gradient(90deg, rgba(220,38,38,0.08), rgba(217,119,6,0.05)); border-bottom: 1px solid rgba(220,38,38,0.20); padding: 10px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s; }
+.alert-banner:hover { background: linear-gradient(90deg, rgba(220,38,38,0.14), rgba(217,119,6,0.08)); }
+.alert-banner.hidden { display: none; }
+.alert-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: pulse 1.5s infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); } 50% { box-shadow: 0 0 0 5px rgba(220,38,38,0); } }
+.alert-text { font-size: 0.85rem; color: #b91c1c; font-weight: 500; flex: 1; }
+.alert-close { color: var(--text3); font-size: 1.1rem; padding: 2px 6px; cursor: pointer; }
+
+/* ── TABS ── */
+.tabs-nav { display: flex; background: var(--surface); border-bottom: 2px solid var(--border); padding: 0 20px; gap: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.tab-btn { padding: 14px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; color: var(--text3); background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.tab-btn:hover { color: var(--text2); }
+.tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+.tab-badge { background: var(--red); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 1px 6px; border-radius: 20px; min-width: 18px; text-align: center; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.topbar .btn-ghost { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+.topbar .btn-ghost:hover { background: rgba(255,255,255,0.3); }
+.main { padding: 20px; max-width: 900px; margin: 0 auto; }
+
+/* ── STAT CARDS ── */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; transition: border-color 0.2s; }
+.stat-card:hover { border-color: var(--orange); }
+.stat-card.red-card:hover { border-color: var(--red); }
+.stat-label { font-size: 0.75rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+.stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; font-weight: 700; line-height: 1; color: var(--orange); }
+.stat-value.red { color: var(--red); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.green { color: var(--green); }
+
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.btn { padding: 11px 18px; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+.btn:active { transform: translateY(0); }
+.btn-green { background: var(--green); color: #fff; }
+.btn-red   { background: var(--red);   color: #fff; }
+.btn-blue  { background: var(--blue);  color: #fff; }
+.btn-orange{ background: var(--orange);color: #fff; }
+.btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+.btn-icon  { padding: 11px 13px; }
+
+/* ── TABLE ── */
+.section-title { font-size: 0.78rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px; }
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+thead th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 0.75rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+tbody td { padding: 11px 14px; color: var(--text2); border-top: 1px solid var(--border); }
+tbody tr:hover td { background: #fef9f5; }
+.type-entrada { color: var(--green); font-weight: 600; }
+.type-saida   { color: var(--red);   font-weight: 600; }
+.low-stock td { background: rgba(220,38,38,0.03); }
+.low-stock td:first-child { border-left: 3px solid var(--red); }
+.qty-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+.qty-ok    { background: var(--green-soft); color: var(--green); }
+.qty-low   { background: var(--yellow-soft); color: var(--yellow); }
+.qty-empty { background: var(--red-soft); color: var(--red); }
+
+/* ── ALERT LIST ── */
+.alert-panel { background: var(--surface); border: 1px solid rgba(220,38,38,0.25); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+.alert-panel-header { background: rgba(220,38,38,0.07); padding: 12px 16px; font-size: 0.78rem; font-weight: 700; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 8px; }
+.alert-item { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.alert-item-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+.icon-empty { background: var(--red-soft); }
+.icon-low   { background: var(--yellow-soft); }
+.alert-item-info { flex: 1; }
+.alert-item-info .ai-name { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.alert-item-info .ai-sub  { font-size: 0.78rem; color: var(--text3); margin-top: 2px; }
+.alert-item-qty { font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 700; }
+.qty-zero { color: var(--red); }
+.qty-warn { color: var(--yellow); }
+
+/* ── PATRIMÔNIO ── */
+.pat-search-bar { display: flex; align-items: center; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; gap: 10px; margin-bottom: 16px; transition: border-color 0.2s; }
+.pat-search-bar:focus-within { border-color: var(--orange); }
+.pat-search-bar input { flex: 1; border: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 0.92rem; color: var(--text); background: transparent; }
+.pat-search-bar input::placeholder { color: var(--text3); }
+.pat-result-card { background: var(--surface); border: 2px solid var(--orange); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(234,108,26,0.12); }
+.pat-result-header { background: var(--orange); padding: 10px 16px; font-family: 'Space Grotesk', sans-serif; font-size: 0.82rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+.pat-result-body { display: flex; gap: 0; }
+.pat-result-img { width: 110px; min-height: 110px; background: var(--surface2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border-right: 1px solid var(--border); }
+.pat-result-img img { width: 100%; height: 100%; object-fit: cover; }
+.pat-result-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text3); font-size: 0.72rem; text-align: center; padding: 8px; }
+.pat-result-info { flex: 1; padding: 14px 16px; }
+.pat-result-name { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.pat-result-meta { font-size: 0.82rem; color: var(--text2); line-height: 1.8; }
+.pat-result-meta span { color: var(--text3); }
+.pat-result-actions { display: flex; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--surface2); }
+.pat-result-actions .btn { flex: 1; justify-content: center; font-size: 0.82rem; }
+.pat-barcodes { display: flex; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--border); background: #fff; flex-wrap: wrap; }
+.barcode-tag { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; text-align: center; flex: 1; min-width: 140px; }
+.barcode-tag svg { width: 100%; max-height: 48px; }
+.barcode-tag-label { font-size: 0.7rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.pat-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.pat-list-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
+.pat-list-item:hover { border-color: var(--orange); box-shadow: 0 2px 10px rgba(234,108,26,0.10); }
+.pat-list-thumb { width: 50px; height: 50px; border-radius: 8px; background: var(--surface2); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); }
+.pat-list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pat-list-thumb svg { opacity: 0.3; }
+.pat-list-info { flex: 1; min-width: 0; }
+.pat-list-id { font-size: 0.72rem; font-weight: 700; color: var(--orange); margin-bottom: 2px; }
+.pat-list-name { font-size: 0.9rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pat-list-sub { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+.status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-top: 4px; }
+.s-ativo  { background: var(--green-soft); color: var(--green); }
+.s-em-uso { background: var(--blue-soft); color: var(--blue); }
+.s-manut  { background: var(--red-soft); color: var(--red); }
+.s-ocioso { background: var(--surface2); color: var(--text3); }
+
+/* ── SEARCH ── */
+.search-wrap { position: relative; margin-bottom: 20px; }
+.search-wrap input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px 12px 44px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); outline: none; transition: border-color 0.2s; }
+.search-wrap input:focus { border-color: var(--orange); }
+.search-wrap input::placeholder { color: var(--text3); }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); }
+
+/* ── MODAL ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 500; align-items: flex-end; justify-content: center; padding: 0; }
+.modal-overlay.open { display: flex; }
+@media (min-width: 600px) { .modal-overlay { align-items: center; padding: 20px; } }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius) var(--radius) 0 0; padding: 24px 20px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; animation: slideUp .25s ease; }
+@media (min-width: 600px) { .modal { border-radius: var(--radius); animation: modalIn .2s ease; } }
+@keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 20px; display: block; }
+@media (min-width: 600px) { .modal-handle { display: none; } }
+.modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-full { grid-column: 1/-1; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 0.75rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select, .form-group textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); outline: none; transition: border-color 0.2s; appearance: none; -webkit-appearance: none; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--orange); background: #fff; }
+.form-group textarea { resize: vertical; min-height: 70px; }
+.form-group select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238891b4' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; overflow: hidden; }
+.photo-upload-area:hover { border-color: var(--orange); background: var(--orange-soft); }
+.photo-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; padding: 0; border: none; background: none; }
+.photo-upload-text { font-size: 0.82rem; color: var(--text3); }
+.photo-upload-text strong { display: block; color: var(--orange); margin-bottom: 4px; }
+.photo-preview { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; display: none; }
+.barcode-wrap { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; text-align: center; margin-top: 14px; }
+.barcode-wrap svg { width: 100%; max-height: 55px; }
+.barcode-id { font-size: 0.75rem; color: var(--text3); margin-top: 6px; font-weight: 600; letter-spacing: 1px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.modal-actions .btn { flex: 1; justify-content: center; }
+.pat-detail-photo { width: 100%; height: 180px; background: var(--surface2); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; }
+.pat-detail-photo img { width: 100%; height: 100%; object-fit: cover; }
+.pat-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.pat-info-label { font-size: 0.72rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.pat-info-value { font-size: 0.9rem; color: var(--text); font-weight: 500; }
+
+/* ── TOAST ── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px 20px; border-radius: 30px; font-size: 0.88rem; font-weight: 500; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 999; white-space: nowrap; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── PRINT ── */
+@media print { body * { visibility: hidden; } #print-zone, #print-zone * { visibility: visible; } #print-zone { position: fixed; top: 10mm; left: 10mm; } }
+#print-zone { display: none; background: #fff; color: #000; border: 1.5px solid #000; border-radius: 6px; padding: 10px 16px; width: 250px; text-align: center; }
+#pz-title { font-weight: 800; font-size: 1rem; margin-bottom: 4px; }
+#pz-code  { font-size: .8rem; color: #555; margin-bottom: 6px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) { .main { padding: 14px; } .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } .stat-card { padding: 12px; } .stat-value { font-size: 1.6rem; } .pat-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .btn-row { gap: 8px; } .btn { padding: 10px 12px; font-size: 0.82rem; } table { font-size: 0.8rem; } thead th, tbody td { padding: 8px 10px; } .tabs-nav { padding: 0 14px; overflow-x: auto; } .tab-btn { padding: 12px 14px; font-size: 0.82rem; } }
+@media (max-width: 380px) { .pat-grid { grid-template-columns: 1fr; } .stat-label { font-size: 0.68rem; } }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p>Conectando ao Supabase...</p>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">Sistema de <span>Controle</span></div>
+  <div class="sync-indicator">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-label">Online</span>
+  </div>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alert-banner" onclick="showAlertDetail()">
+  <div class="alert-dot"></div>
+  <div class="alert-text" id="alert-banner-text">Carregando alertas...</div>
+  <div class="alert-close" onclick="event.stopPropagation();document.getElementById('alert-banner').classList.add('hidden')">✕</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-nav">
+  <button class="tab-btn active" onclick="switchTab('almoxarifado',this)" id="tab-alm">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+    Almoxarifado
+    <span class="tab-badge" id="badge-alm" style="display:none">0</span>
+  </button>
+  <button class="tab-btn orange-tab" onclick="switchTab('patrimonio',this)" id="tab-pat">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+    Patrimônio
+  </button>
+</div>
+
+<!-- ABA ALMOXARIFADO -->
+<div class="tab-content active" id="tab-almoxarifado">
+<div class="main">
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Em Estoque</div><div class="stat-value" id="stat-total">—</div></div>
+    <div class="stat-card red-card"><div class="stat-label">Em Falta</div><div class="stat-value red" id="stat-falta">—</div></div>
+    <div class="stat-card orange-card"><div class="stat-label">Estoque Baixo</div><div class="stat-value orange" id="stat-baixo">—</div></div>
+  </div>
+  <div id="alert-list-wrap"></div>
+  <div class="btn-row">
+    <button class="btn btn-green" onclick="openModal('entrada')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>Entrada
+    </button>
+    <button class="btn btn-red" onclick="openModal('saida')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Saída
+    </button>
+    <button class="btn btn-ghost" onclick="openModal('addAlm')" style="margin-left:auto">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo Item
+    </button>
+  </div>
+  <div class="search-wrap" style="margin-bottom:16px">
+    <span class="search-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>
+    <input type="text" id="alm-search" placeholder="Buscar item por nome, código ou categoria..." oninput="filterEstoque()" style="padding-right:50px">
+    <button onclick="openBarcodeScanner('alm')" title="Ler código de barras" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--orange);border:none;border-radius:6px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="17" y1="12" x2="17" y2="12.01"/></svg>
+    </button>
+  </div>
+  <div class="section-title">Itens em Estoque</div>
+  <div class="table-wrap"><table><thead><tr><th>Código</th><th>Item</th><th>Categoria</th><th>Qtd</th><th>Local</th><th>Ações</th></tr></thead><tbody id="tbl-estoque"></tbody></table></div>
+  <div class="section-title">Movimentações Recentes</div>
+  <div class="table-wrap"><table><thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Qtd</th><th>Responsável</th></tr></thead><tbody id="tbl-historico"></tbody></table></div>
+</div>
+</div>
+
+<!-- ABA PATRIMÔNIO -->
+<div class="tab-content" id="tab-patrimonio">
+<div class="main">
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Total Itens</div><div class="stat-value" id="pat-stat-total">—</div></div>
+    <div class="stat-card red-card"><div class="stat-label">Manutenção</div><div class="stat-value red" id="pat-stat-man">—</div></div>
+    <div class="stat-card"><div class="stat-label">Ociosos</div><div class="stat-value" style="color:var(--text3)" id="pat-stat-ocioso">—</div></div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+    <button class="btn btn-orange" onclick="openModal('addPat')" style="flex-shrink:0">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo
+    </button>
+    <div class="pat-search-bar" style="flex:1;margin:0;position:relative">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="pat-search" placeholder="Buscar Patrimônio: [PAT-0005]" oninput="filterPatrimonio()" style="padding-right:40px">
+      <button onclick="openBarcodeScanner('pat')" title="Ler código de barras" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--orange);border:none;border-radius:6px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="17" y1="12" x2="17" y2="12.01"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="pat-result-zone"></div>
+  <div class="pat-list" id="pat-grid"></div>
+</div>
+</div>
+
+<!-- MODAIS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- Print Zone -->
+<div id="print-zone"><div id="pz-title"></div><div id="pz-code"></div><svg id="barcode-print"></svg></div>
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ════════════════════════════════════════════════════════════
+const SUPA_URL  = 'https://sayagmwiuxznmcazzftb.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWFnbXdpdXh6bm1jYXp6ZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg4NDksImV4cCI6MjA5MjQ0NDg0OX0.eTPVg0c757QDvs5UBCsxCkJCNYBBEZA9A7KbQSbp9ug';
+
+const HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': `Bearer ${SUPA_KEY}`,
+  'Prefer': 'return=representation'
+};
+
+// ── Helpers REST ─────────────────────────────────────────────
+async function sbGet(schema, table, params = '') {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${params}`, {
+    headers: { ...HEADERS, 'Accept-Profile': schema }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbPost(schema, table, body) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { ...HEADERS, 'Content-Profile': schema },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbPatch(schema, table, filter, body) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`, {
+    method: 'PATCH',
+    headers: { ...HEADERS, 'Content-Profile': schema },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbDelete(schema, table, filter) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`, {
+    method: 'DELETE',
+    headers: { ...HEADERS, 'Content-Profile': schema }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return true;
+}
+
+// ════════════════════════════════════════════════════════════
+//  ESTADO LOCAL (cache)
+// ════════════════════════════════════════════════════════════
+let estoque   = [];
+let historico = [];
+let patrimonio = [];
+let currentModal = '';
+let tempPhotoData = null;
+
+// Sync indicator
+function setSyncing(v) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot' + (v === 'syncing' ? ' syncing' : v === 'error' ? ' error' : '');
+  lbl.textContent = v === 'syncing' ? 'Salvando...' : v === 'error' ? 'Erro' : 'Online';
+}
+
+// ════════════════════════════════════════════════════════════
+//  INIT — carregar dados do Supabase
+// ════════════════════════════════════════════════════════════
+async function initApp() {
+  try {
+    const [itens, movs, bens] = await Promise.all([
+      sbGet('almoxarifado', 'itens', 'order=id.asc'),
+      sbGet('almoxarifado', 'movimentacoes', 'order=criado_em.desc&limit=30'),
+      sbGet('patrimonio',   'bens',          'order=id.asc')
+    ]);
+    estoque    = itens;
+    historico  = movs.map(m => ({ dt: new Date(m.criado_em).toLocaleDateString('pt-BR'), item: m.item_nome, tipo: m.tipo, qtd: m.qtd, resp: m.responsavel, obs: m.obs||'' }));
+    patrimonio = bens.map(b => ({ id: b.id, desc: b.descricao, sala: b.sala, resp: b.responsavel, status: b.status, obs: b.obs||'', dt: b.dt_cadastro, foto: b.foto_url||null }));
+    setSyncing('ok');
+  } catch(e) {
+    console.error('Init error:', e);
+    setSyncing('error');
+    toast('⚠️ Erro ao conectar. Verifique o SQL setup.','error');
+  }
+  document.getElementById('loading-overlay').classList.add('hidden');
+  renderEstoque(); renderHistorico(); renderPatrimonio(); updateAlerts();
+}
+
+// ════════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════════
+function now() { return new Date().toLocaleDateString('pt-BR'); }
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = type==='error' ? 'var(--red)' : type==='ok' ? 'var(--green)' : 'var(--border)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Gerar próximo ID
+async function nextAlmId() {
+  const all = await sbGet('almoxarifado','itens','select=id&order=id.desc&limit=1');
+  if(!all.length) return 'ALM-001';
+  const n = parseInt(all[0].id.replace('ALM-',''))||0;
+  return 'ALM-' + String(n+1).padStart(3,'0');
+}
+async function nextPatId() {
+  const all = await sbGet('patrimonio','bens','select=id&order=id.desc&limit=1');
+  if(!all.length) return 'PAT-0001';
+  const n = parseInt(all[0].id.replace('PAT-',''))||0;
+  return 'PAT-' + String(n+1).padStart(4,'0');
+}
+
+// ════════════════════════════════════════════════════════════
+//  ALERTS
+// ════════════════════════════════════════════════════════════
+function updateAlerts() {
+  const vazios = estoque.filter(i => i.qtd === 0);
+  const baixos = estoque.filter(i => i.qtd > 0 && i.qtd < i.minimo);
+  const total  = vazios.length + baixos.length;
+  const badge = document.getElementById('badge-alm');
+  if(total > 0) { badge.textContent = total; badge.style.display='inline-block'; } else badge.style.display='none';
+  const banner = document.getElementById('alert-banner');
+  if(total > 0) {
+    banner.classList.remove('hidden');
+    let parts = [];
+    if(vazios.length) parts.push(`${vazios.length} item(ns) em falta`);
+    if(baixos.length) parts.push(`${baixos.length} com estoque baixo`);
+    document.getElementById('alert-banner-text').textContent = '⚠️ ' + parts.join(' • ') + ' — toque para ver detalhes';
+  } else { banner.classList.add('hidden'); }
+  const wrap = document.getElementById('alert-list-wrap');
+  if(total === 0) { wrap.innerHTML=''; } else {
+    const items = [...vazios.map(i=>({...i,tipo:'empty'})),...baixos.map(i=>({...i,tipo:'low'}))];
+    wrap.innerHTML = `<div class="alert-panel"><div class="alert-panel-header"><div class="alert-dot"></div>Alertas de Estoque (${total})</div>${items.map(i=>`<div class="alert-item"><div class="alert-item-icon ${i.tipo==='empty'?'icon-empty':'icon-low'}">${i.tipo==='empty'?'❌':'⚠️'}</div><div class="alert-item-info"><div class="ai-name">${i.nome}</div><div class="ai-sub">${i.id} • Mín: ${i.minimo} ${i.un} • ${i.local}</div></div><div class="alert-item-qty ${i.tipo==='empty'?'qty-zero':'qty-warn'}">${i.qtd} ${i.un}</div></div>`).join('')}</div>`;
+  }
+  document.getElementById('stat-falta').textContent = vazios.length;
+  document.getElementById('stat-baixo').textContent = baixos.length;
+  document.getElementById('stat-total').textContent = estoque.reduce((a,b)=>a+b.qtd,0).toLocaleString('pt-BR');
+}
+function showAlertDetail() { document.querySelectorAll('.tab-btn')[0].click(); document.getElementById('alert-list-wrap').scrollIntoView({behavior:'smooth'}); }
+
+// ════════════════════════════════════════════════════════════
+//  RENDER ESTOQUE
+// ════════════════════════════════════════════════════════════
+function renderEstoque() {
+  const q = (document.getElementById('alm-search')||{value:''}).value.trim().toLowerCase();
+  const lista = q ? estoque.filter(i=>i.id.toLowerCase().includes(q)||i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q)||i.local.toLowerCase().includes(q)) : estoque;
+  const tbody = document.getElementById('tbl-estoque');
+  tbody.innerHTML = lista.map(i => {
+    const low=i.qtd<i.minimo&&i.qtd>0; const empty=i.qtd===0;
+    const cls=empty||low?'low-stock':''; const badgeCls=empty?'qty-empty':low?'qty-low':'qty-ok';
+    return `<tr class="${cls}"><td style="color:var(--blue);font-weight:600;font-size:0.8rem">${i.id}</td><td style="color:var(--text);font-weight:500">${i.nome}</td><td>${i.categoria}</td><td><span class="qty-badge ${badgeCls}">${i.qtd} ${i.un}</span></td><td>${i.local}</td><td><div style="display:flex;gap:5px"><button class="btn btn-ghost" style="padding:4px 9px;font-size:0.75rem" onclick="editarAlm('${i.id}')">✏️</button><button class="btn" style="padding:4px 9px;font-size:0.75rem;background:var(--red-soft);color:var(--red);border:1px solid rgba(220,38,38,0.2)" onclick="confirmarExcluirAlm('${i.id}')">🗑</button></div></td></tr>`;
+  }).join('');
+}
+function filterEstoque() { renderEstoque(); }
+
+// ════════════════════════════════════════════════════════════
+//  RENDER HISTÓRICO
+// ════════════════════════════════════════════════════════════
+function renderHistorico() {
+  const tbody = document.getElementById('tbl-historico');
+  tbody.innerHTML = [...historico].slice(0,8).map(h=>`<tr><td>${h.dt}</td><td style="color:var(--text);font-weight:500">${h.item}</td><td class="${h.tipo==='Entrada'?'type-entrada':'type-saida'}">${h.tipo}</td><td>${h.qtd}</td><td>${h.resp}</td></tr>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+//  RENDER PATRIMÔNIO
+// ════════════════════════════════════════════════════════════
+function statusClass(s) {
+  if(s==='Ativo') return 's-ativo';
+  if(s==='Em Uso') return 's-em-uso';
+  if(s==='Em Manutenção') return 's-manut';
+  return 's-ocioso';
+}
+function renderPatrimonio(list) {
+  list = list || patrimonio;
+  const grid = document.getElementById('pat-grid');
+  const resultZone = document.getElementById('pat-result-zone');
+  const q = (document.getElementById('pat-search').value||'').trim();
+  const exact = q ? patrimonio.find(p=>p.id.toLowerCase()===q.toLowerCase()) : null;
+  if(exact && q) {
+    resultZone.innerHTML = `<div class="pat-result-card"><div class="pat-result-header">📋 Cadastro de Patrimônio</div><div class="pat-result-body"><div class="pat-result-img">${exact.foto?`<img src="${exact.foto}" alt="${exact.desc}">`:`<div class="pat-result-img-placeholder"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Sem foto</span></div>`}</div><div class="pat-result-info"><div class="pat-result-name">${exact.desc}</div><div class="pat-result-meta"><span>Código:</span> ${exact.id}<br><span>Local:</span> ${exact.sala}<br><span>Responsável:</span> ${exact.resp}<br><span>Status:</span> <span class="status-badge ${statusClass(exact.status)}" style="margin-top:0">${exact.status}</span></div></div></div><div class="pat-barcodes"><div class="barcode-tag"><svg id="bc-result-1"></svg><div class="barcode-tag-label">Patrimônio: ${exact.id}</div></div></div><div class="pat-result-actions"><button class="btn btn-orange" onclick="gerarEtiqueta('${exact.id}')">🏷 Gerar Etiqueta</button><button class="btn btn-blue" onclick="openPatDetail('${exact.id}')">🔍 Ver Detalhes</button><button class="btn btn-ghost" onclick="editarPat('${exact.id}')">✏️ Editar</button></div></div>`;
+    setTimeout(()=>{ try{JsBarcode('#bc-result-1',exact.id,{format:'CODE128',width:1.8,height:44,displayValue:true,fontSize:10,margin:4,background:'#ffffff',lineColor:'#1a1f36'});}catch(e){} },60);
+  } else { resultZone.innerHTML=''; }
+  grid.innerHTML = list.map(p=>`<div class="pat-list-item" onclick="openPatDetail('${p.id}')"><div class="pat-list-thumb">${p.foto?`<img src="${p.foto}" alt="${p.desc}">`:`<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`}</div><div class="pat-list-info"><div class="pat-list-id">${p.id}</div><div class="pat-list-name">${p.desc}</div><div class="pat-list-sub">📍 ${p.sala} &nbsp;•&nbsp; 👤 ${p.resp}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="status-badge ${statusClass(p.status)}" style="margin:0">${p.status}</span><div style="display:flex;gap:6px"><button class="btn btn-ghost" style="padding:5px 10px;font-size:0.75rem" onclick="event.stopPropagation();gerarEtiqueta('${p.id}')">🏷</button><button class="btn btn-ghost" style="padding:5px 10px;font-size:0.75rem" onclick="event.stopPropagation();editarPat('${p.id}')">✏️</button></div></div></div>`).join('');
+  document.getElementById('pat-stat-total').textContent = patrimonio.length;
+  document.getElementById('pat-stat-man').textContent   = patrimonio.filter(p=>p.status==='Em Manutenção').length;
+  document.getElementById('pat-stat-ocioso').textContent= patrimonio.filter(p=>p.status==='Ocioso').length;
+}
+function filterPatrimonio() {
+  const q = document.getElementById('pat-search').value.trim().toLowerCase();
+  if(!q) { renderPatrimonio(); return; }
+  renderPatrimonio(patrimonio.filter(p=>p.id.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)||p.sala.toLowerCase().includes(q)||p.resp.toLowerCase().includes(q)||p.status.toLowerCase().includes(q)));
+}
+
+// ════════════════════════════════════════════════════════════
+//  DETALHE PATRIMÔNIO
+// ════════════════════════════════════════════════════════════
+function openPatDetail(id) {
+  const p = patrimonio.find(x=>x.id===id); if(!p) return;
+  openGenericModal('Detalhes do Patrimônio',`<div class="pat-detail-photo">${p.foto?`<img src="${p.foto}" alt="${p.desc}">`:`<div style="text-align:center;color:var(--text3)"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div style="margin-top:6px;font-size:0.8rem">Sem foto cadastrada</div></div>`}</div><div class="pat-info-grid"><div class="pat-info-item"><div class="pat-info-label">Código</div><div class="pat-info-value" style="color:var(--orange);font-weight:700">${p.id}</div></div><div class="pat-info-item"><div class="pat-info-label">Status</div><div class="pat-info-value"><span class="status-badge ${statusClass(p.status)}">${p.status}</span></div></div><div class="pat-info-item"><div class="pat-info-label">Local</div><div class="pat-info-value">${p.sala}</div></div><div class="pat-info-item"><div class="pat-info-label">Responsável</div><div class="pat-info-value">${p.resp}</div></div><div class="pat-info-item" style="grid-column:1/-1"><div class="pat-info-label">Descrição</div><div class="pat-info-value">${p.desc}</div></div><div class="pat-info-item"><div class="pat-info-label">Data Cadastro</div><div class="pat-info-value">${p.dt||'—'}</div></div>${p.obs?`<div class="pat-info-item" style="grid-column:1/-1"><div class="pat-info-label">Observações</div><div class="pat-info-value" style="font-size:0.85rem;color:var(--text2);background:var(--surface2);border-radius:8px;padding:10px;margin-top:2px;border:1px solid var(--border)">${p.obs}</div></div>`:''}</div><div class="barcode-wrap"><svg id="bc-detail"></svg><div class="barcode-id">${p.id}</div></div>`,
+  `<button class="btn btn-ghost" onclick="closeModal()">Fechar</button><button class="btn btn-orange" onclick="gerarEtiqueta('${p.id}');closeModal()">🏷 Imprimir Etiqueta</button>`);
+  setTimeout(()=>{ try{JsBarcode('#bc-detail',p.id,{format:'CODE128',width:1.5,height:40,displayValue:false,margin:2,background:'transparent',lineColor:'#1a1f36'});}catch(e){} },60);
+}
+
+// ════════════════════════════════════════════════════════════
+//  MODAL GENÉRICO
+// ════════════════════════════════════════════════════════════
+function openGenericModal(title, body, actions) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-actions').innerHTML = actions;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e) {
+  if(e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  tempPhotoData = null;
+}
+
+// ════════════════════════════════════════════════════════════
+//  MODAL PRINCIPAL
+// ════════════════════════════════════════════════════════════
+function openModal(type) {
+  currentModal = type;
+
+  if(type==='entrada'||type==='saida') {
+    const isE = type==='entrada';
+    openGenericModal(isE?'↓ Entrada de Estoque':'↑ Saída de Estoque',
+      `<div class="form-grid"><div class="form-group form-full"><label>Item</label><select id="m-item">${estoque.map(i=>`<option value="${i.id}">${i.nome} (${i.id}) — Atual: ${i.qtd} ${i.un}</option>`).join('')}</select></div><div class="form-group"><label>Quantidade</label><input type="number" id="m-qtd" min="1" value="1" inputmode="numeric"></div><div class="form-group"><label>Responsável</label><input type="text" id="m-resp" placeholder="Nome completo"></div><div class="form-group form-full"><label>Observação</label><textarea id="m-obs" placeholder="NF, destino, motivo..."></textarea></div></div>`,
+      `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn ${isE?'btn-green':'btn-red'}" onclick="submitMov('${type}')">${isE?'↓ Confirmar Entrada':'↑ Confirmar Saída'}</button>`
+    ); return;
+  }
+
+  if(type==='addAlm') {
+    tempPhotoData = null;
+    openGenericModal('+ Novo Item de Estoque',
+      `<div class="form-grid"><div class="form-group form-full"><label>Nome do Item</label><input type="text" id="new-nome" placeholder="Ex: Papel A4 500 folhas"></div><div class="form-group"><label>Categoria</label><select id="new-cat"><option>Papelaria</option><option>TI</option><option>Elétrico</option><option>Limpeza</option><option>Ferramentas</option><option>Outros</option></select></div><div class="form-group"><label>Unidade</label><select id="new-un"><option>Un</option><option>Resma</option><option>Caixa</option><option>Pacote</option><option>Litro</option><option>Kg</option></select></div><div class="form-group"><label>Quantidade Inicial</label><input type="number" id="new-qtd" min="0" value="0" inputmode="numeric"></div><div class="form-group"><label>Qtd Mínima (alerta)</label><input type="number" id="new-min" min="1" value="5" inputmode="numeric"></div><div class="form-group form-full"><label>Local de Armazenamento</label><input type="text" id="new-local" placeholder="Ex: Almoxarifado Central"></div><div class="form-group form-full"><label>Foto do Item</label><div class="photo-upload-area"><input type="file" id="alm-photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'alm-preview')"><img id="alm-preview" class="photo-preview"><div class="photo-upload-text" id="alm-upload-text"><strong>📷 Tirar Foto ou Selecionar Imagem</strong>A imagem aparecerá no cadastro do item</div></div></div></div>`,
+      `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="submitAddAlm()">+ Cadastrar Item</button>`
+    ); return;
+  }
+
+  if(type==='addPat') {
+    tempPhotoData = null;
+    openGenericModal('+ Novo Patrimônio',
+      `<div class="form-grid"><div class="form-group form-full"><label>Descrição</label><input type="text" id="pat-desc" placeholder="Ex: Notebook Dell Latitude"></div><div class="form-group"><label>Local / Sala</label><input type="text" id="pat-sala" placeholder="Ex: Sala 101"></div><div class="form-group"><label>Responsável</label><input type="text" id="pat-resp" placeholder="Nome completo"></div><div class="form-group form-full"><label>Status</label><select id="pat-status"><option>Ativo</option><option>Em Uso</option><option>Em Manutenção</option><option>Ocioso</option></select></div><div class="form-group form-full"><label>Observações</label><textarea id="pat-obs" placeholder="Informações adicionais..." style="min-height:80px"></textarea></div><div class="form-group form-full"><label>📷 Foto do Item</label><div class="photo-upload-area"><input type="file" id="pat-photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'pat-preview')"><img id="pat-preview" class="photo-preview"><div class="photo-upload-text" id="pat-upload-text"><strong>📷 Tirar Foto ou Selecionar Imagem</strong>A foto aparecerá no card do patrimônio</div></div></div></div>`,
+      `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-orange" onclick="submitAddPat()">+ Cadastrar Patrimônio</button>`
+    ); return;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  FOTO — compressão JPEG via Canvas (máx 800px, qualidade 60%)
+// ════════════════════════════════════════════════════════════
+function handlePhoto(event, previewId) {
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX) {
+        if(w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.60);
+      const before = Math.round(e.target.result.length / 1024);
+      const after  = Math.round(compressed.length / 1024);
+      tempPhotoData = compressed;
+      const preview = document.getElementById(previewId);
+      const textEl  = document.getElementById(previewId.replace('preview','upload-text'));
+      preview.src = compressed; preview.style.display='block';
+      if(textEl) textEl.style.display='none';
+      toast(`📷 Foto comprimida: ${before}KB → ${after}KB`, 'ok');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ════════════════════════════════════════════════════════════
+//  SUBMIT MOVIMENTAÇÃO
+// ════════════════════════════════════════════════════════════
+async function submitMov(tipo) {
+  const itemId = document.getElementById('m-item').value;
+  const qtd    = parseInt(document.getElementById('m-qtd').value)||0;
+  const resp   = document.getElementById('m-resp').value;
+  const obs    = document.getElementById('m-obs').value;
+  if(qtd<=0) { toast('❌ Informe uma quantidade válida.','error'); return; }
+  const item = estoque.find(i=>i.id===itemId); if(!item) return;
+  if(tipo==='saida' && qtd>item.qtd) { toast('❌ Quantidade insuficiente em estoque!','error'); return; }
+  const novaQtd = tipo==='entrada' ? item.qtd+qtd : item.qtd-qtd;
+  const tipoLabel = tipo==='entrada'?'Entrada':'Saída';
+  setSyncing('syncing');
+  try {
+    await sbPatch('almoxarifado','itens',`id=eq.${itemId}`,{ qtd: novaQtd });
+    await sbPost('almoxarifado','movimentacoes',{ item_id: itemId, item_nome: item.nome, tipo: tipoLabel, qtd, responsavel: resp||'Sistema', obs });
+    item.qtd = novaQtd;
+    historico.unshift({ dt: now(), item: item.nome, tipo: tipoLabel, qtd, resp: resp||'Sistema', obs });
+    renderEstoque(); renderHistorico(); updateAlerts();
+    setSyncing('ok');
+    document.getElementById('modal-overlay').classList.remove('open');
+    toast(`✅ ${tipoLabel} registrada: ${qtd}× ${item.nome}`,'ok');
+  } catch(e) { setSyncing('error'); toast('❌ Erro ao salvar: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  SUBMIT NOVO ITEM (ALMOXARIFADO)
+// ════════════════════════════════════════════════════════════
+async function submitAddAlm() {
+  const nome  = document.getElementById('new-nome').value.trim();
+  const cat   = document.getElementById('new-cat').value;
+  const un    = document.getElementById('new-un').value;
+  const qtd   = parseInt(document.getElementById('new-qtd').value)||0;
+  const min   = parseInt(document.getElementById('new-min').value)||5;
+  const local = document.getElementById('new-local').value.trim()||'Almoxarifado';
+  if(!nome) { toast('❌ Informe o nome do item.','error'); return; }
+  setSyncing('syncing');
+  try {
+    const id = await nextAlmId();
+    const novo = { id, nome, categoria: cat, qtd, un, local, minimo: min, foto_url: tempPhotoData||null };
+    await sbPost('almoxarifado','itens', novo);
+    estoque.push({ id, nome, categoria: cat, qtd, un, local, minimo: min, foto: tempPhotoData||null });
+    renderEstoque(); updateAlerts(); setSyncing('ok');
+    document.getElementById('modal-overlay').classList.remove('open');
+    toast(`✅ Item cadastrado: ${nome}`,'ok');
+  } catch(e) { setSyncing('error'); toast('❌ Erro ao salvar: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  SUBMIT NOVO PATRIMÔNIO
+// ════════════════════════════════════════════════════════════
+async function submitAddPat() {
+  const desc   = document.getElementById('pat-desc').value.trim();
+  const sala   = document.getElementById('pat-sala').value.trim();
+  const resp   = document.getElementById('pat-resp').value.trim();
+  const status = document.getElementById('pat-status').value;
+  const obs    = document.getElementById('pat-obs').value.trim();
+  if(!desc) { toast('❌ Informe a descrição.','error'); return; }
+  setSyncing('syncing');
+  try {
+    const id = await nextPatId();
+    const dtHoje = new Date().toISOString().slice(0,10);
+    await sbPost('patrimonio','bens',{ id, descricao: desc, sala: sala||'—', responsavel: resp||'—', status, obs: obs||null, foto_url: tempPhotoData||null, dt_cadastro: dtHoje });
+    patrimonio.push({ id, desc, sala: sala||'—', resp: resp||'—', status, obs, dt: dtHoje, foto: tempPhotoData||null });
+    renderPatrimonio(); setSyncing('ok');
+    document.getElementById('modal-overlay').classList.remove('open');
+    toast(`✅ Patrimônio cadastrado: ${id}`,'ok');
+  } catch(e) { setSyncing('error'); toast('❌ Erro ao salvar: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  EDITAR ALMOXARIFADO
+// ════════════════════════════════════════════════════════════
+function editarAlm(id) {
+  const item = estoque.find(x=>x.id===id); if(!item) return;
+  openGenericModal(`Editar Item ${item.id}`,
+    `<div class="form-grid"><div class="form-group form-full"><label>Nome do Item</label><input type="text" id="ea-nome" value="${item.nome}"></div><div class="form-group"><label>Categoria</label><select id="ea-cat">${['Papelaria','TI','Elétrico','Limpeza','Ferramentas','Outros'].map(c=>`<option ${c===item.categoria?'selected':''}>${c}</option>`).join('')}</select></div><div class="form-group"><label>Unidade</label><select id="ea-un">${['Un','Resma','Caixa','Pacote','Litro','Kg'].map(u=>`<option ${u===item.un?'selected':''}>${u}</option>`).join('')}</select></div><div class="form-group"><label>Quantidade</label><input type="number" id="ea-qtd" min="0" value="${item.qtd}" inputmode="numeric"></div><div class="form-group"><label>Qtd Mínima (alerta)</label><input type="number" id="ea-min" min="1" value="${item.minimo}" inputmode="numeric"></div><div class="form-group form-full"><label>Local de Armazenamento</label><input type="text" id="ea-local" value="${item.local}"></div></div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-blue" onclick="salvarEditAlm('${id}')">💾 Salvar</button>`
+  );
+}
+
+async function salvarEditAlm(id) {
+  const item = estoque.find(x=>x.id===id); if(!item) return;
+  const updates = {
+    nome:      document.getElementById('ea-nome').value.trim() || item.nome,
+    categoria: document.getElementById('ea-cat').value,
+    un:        document.getElementById('ea-un').value,
+    qtd:       parseInt(document.getElementById('ea-qtd').value)||0,
+    minimo:    parseInt(document.getElementById('ea-min').value)||5,
+    local:     document.getElementById('ea-local').value.trim() || item.local
+  };
+  setSyncing('syncing');
+  try {
+    await sbPatch('almoxarifado','itens',`id=eq.${id}`, updates);
+    Object.assign(item, updates);
+    renderEstoque(); updateAlerts(); setSyncing('ok');
+    document.getElementById('modal-overlay').classList.remove('open');
+    toast('✅ Item atualizado!','ok');
+  } catch(e) { setSyncing('error'); toast('❌ Erro: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  EXCLUIR ALMOXARIFADO
+// ════════════════════════════════════════════════════════════
+function confirmarExcluirAlm(id) {
+  const item = estoque.find(x=>x.id===id); if(!item) return;
+  openGenericModal('⚠️ Confirmar Exclusão',
+    `<div style="text-align:center;padding:10px 0"><div style="width:56px;height:56px;background:var(--red-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.6rem">🗑</div><p style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px">Excluir "${item.nome}"?</p><p style="font-size:0.85rem;color:var(--text2);margin-bottom:20px">Esta ação não pode ser desfeita.</p><div class="form-group" style="text-align:left"><label style="color:var(--red)">Digite o código do item para confirmar</label><input type="text" id="confirm-excluir-id" placeholder="${item.id}" style="border-color:var(--red)"></div></div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-red" onclick="executarExcluirAlm('${id}')">🗑 Excluir Permanentemente</button>`
+  );
+}
+
+async function executarExcluirAlm(id) {
+  const item = estoque.find(x=>x.id===id); if(!item) return;
+  if(document.getElementById('confirm-excluir-id').value.trim() !== item.id) { toast('❌ Código incorreto.','error'); return; }
+  setSyncing('syncing');
+  try {
+    await sbDelete('almoxarifado','itens',`id=eq.${id}`);
+    estoque = estoque.filter(x=>x.id!==id);
+    renderEstoque(); updateAlerts(); setSyncing('ok');
+    document.getElementById('modal-overlay').classList.remove('open');
+    toast(`🗑 Item ${id} excluído.`,'ok');
+  } catch(e) { setSyncing('error'); toast('❌ Erro: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  EDITAR PATRIMÔNIO
+// ════════════════════════════════════════════════════════════
+function editarPat(id) {
+  const p = patrimonio.find(x=>x.id===id); if(!p) return;
+  tempPhotoData = p.foto || null;
+  const fotoAtual = tempPhotoData;
+  openGenericModal(`Editar Patrimônio ${p.id}`,
+    `<div class="form-grid"><div class="form-group form-full"><label>Descrição</label><input type="text" id="ep-desc" value="${p.desc}"></div><div class="form-group"><label>Local / Sala</label><input type="text" id="ep-sala" value="${p.sala}"></div><div class="form-group"><label>Responsável</label><input type="text" id="ep-resp" value="${p.resp}"></div><div class="form-group form-full"><label>Status</label><select id="ep-status">${['Ativo','Em Uso','Em Manutenção','Ocioso'].map(s=>`<option ${s===p.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="form-group form-full"><label>Observações</label><textarea id="ep-obs" style="min-height:80px">${p.obs||''}</textarea></div><div class="form-group form-full"><label>📷 Foto do Item</label><div class="photo-upload-area"><input type="file" id="ep-photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'ep-preview')"><img id="ep-preview" class="photo-preview" ${fotoAtual?`src="${fotoAtual}" style="display:block"`:''}><div class="photo-upload-text" id="ep-upload-text" ${fotoAtual?'style="display:none"':''}><strong>📷 Alterar Foto</strong>Toque para tirar nova foto</div></div></div></div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-orange" onclick="salvarEditPat('${id}')">💾 Salvar</button>`
+  );
+}
+
+async function salvarEditPat(id) {
+  const p = patrimonio.find(x=>x.id===id); if(!p) return;
+  const updates = {
+    descricao:   document.getElementById('ep-desc').value.trim() || p.desc,
+    sala:        document.getElementById('ep-sala').value.trim() || p.sala,
+    responsavel: document.getElementById('ep-resp').value.trim() || p.resp,
+    status:      document.getElementById('ep-status').value,
+    obs:         document.getElementById('ep-obs').value.trim() || null,
+    foto_url:    tempPhotoData || p.foto || null
+  };
+  setSyncing('syncing');
+  try {
+    await sbPatch('patrimonio','bens',`id=eq.${id}`, updates);
+    p.desc   = updates.descricao;
+    p.sala   = updates.sala;
+    p.resp   = updates.responsavel;
+    p.status = updates.status;
+    p.obs    = updates.obs||'';
+    p.foto   = updates.foto_url;
+    renderPatrimonio(); setSyncing('ok');
+    document.getElementById('modal-overlay').classList.remove('open');
+    toast('✅ Patrimônio atualizado!','ok');
+  } catch(e) { setSyncing('error'); toast('❌ Erro: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  GERAR ETIQUETA
+// ════════════════════════════════════════════════════════════
+function gerarEtiqueta(id) {
+  const p = patrimonio.find(x=>x.id===id); if(!p) return;
+  document.getElementById('pz-title').textContent = p.desc;
+  document.getElementById('pz-code').textContent  = `${p.sala} | ${p.resp}`;
+  document.getElementById('print-zone').style.display='block';
+  try { JsBarcode('#barcode-print', p.id, { format:'CODE128', width:2, height:40, displayValue:true, fontSize:11, margin:4 }); } catch(e){}
+  setTimeout(() => { window.print(); document.getElementById('print-zone').style.display='none'; }, 200);
+  toast('🏷 Etiqueta enviada para impressão!','ok');
+}
+
+// ════════════════════════════════════════════════════════════
+//  SCANNER CÓDIGO DE BARRAS
+// ════════════════════════════════════════════════════════════
+let scannerStream=null, scannerInterval=null;
+function openBarcodeScanner(target) {
+  openGenericModal('📷 Ler Código de Barras',
+    `<div style="text-align:center"><p style="font-size:0.85rem;color:var(--text2);margin-bottom:16px">Aponte a câmera para o código de barras do item</p><div style="position:relative;background:#000;border-radius:10px;overflow:hidden;margin-bottom:16px;min-height:220px;display:flex;align-items:center;justify-content:center"><video id="scanner-video" autoplay playsinline style="width:100%;max-height:260px;object-fit:cover;border-radius:10px;display:block"></video><div style="position:absolute;inset:0;border:3px solid var(--orange);border-radius:10px;pointer-events:none"></div><div style="position:absolute;top:50%;left:10%;right:10%;height:2px;background:rgba(234,108,26,0.7);transform:translateY(-50%)"></div><div id="scanner-status" style="position:absolute;bottom:10px;left:0;right:0;text-align:center;color:#fff;font-size:0.8rem;background:rgba(0,0,0,0.5);padding:4px">Iniciando câmera...</div></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:0.75rem;color:var(--text3)">ou digite manualmente</span><div style="flex:1;height:1px;background:var(--border)"></div></div><input type="text" id="scanner-manual" placeholder="Digite o código..." style="width:100%;text-align:center;font-size:1rem;letter-spacing:2px" oninput="this.value=this.value.toUpperCase()"></div>`,
+    `<button class="btn btn-ghost" onclick="stopScanner()">Cancelar</button><button class="btn btn-orange" onclick="usarCodigoManual('${target}')">✓ Usar Código</button>`
+  );
+  startScanner(target);
+}
+function startScanner(target) {
+  const video=document.getElementById('scanner-video'); const status=document.getElementById('scanner-status'); if(!video) return;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) { if(status) status.textContent='⚠️ Câmera não suportada'; return; }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream => {
+    scannerStream=stream; video.srcObject=stream; if(status) status.textContent='🔍 Procurando código...';
+    if('BarcodeDetector' in window) {
+      const detector=new BarcodeDetector({formats:['code_128','ean_13','ean_8','qr_code','code_39']});
+      scannerInterval=setInterval(async()=>{ if(video.readyState===video.HAVE_ENOUGH_DATA) { try { const codes=await detector.detect(video); if(codes.length>0) { clearInterval(scannerInterval); stopScanner(); applyScannedCode(target,codes[0].rawValue); } } catch(e){} } },400);
+    } else { if(status) status.textContent='📷 Câmera ativa — use o campo manual abaixo'; }
+  }).catch(()=>{ if(status) status.textContent='⚠️ Permissão negada. Use o campo manual.'; });
+}
+function stopScanner() {
+  if(scannerStream) { scannerStream.getTracks().forEach(t=>t.stop()); scannerStream=null; }
+  if(scannerInterval) { clearInterval(scannerInterval); scannerInterval=null; }
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function usarCodigoManual(target) {
+  const code=(document.getElementById('scanner-manual').value||'').trim().toUpperCase();
+  if(!code) { toast('❌ Digite um código.','error'); return; }
+  stopScanner(); applyScannedCode(target,code);
+}
+function applyScannedCode(target, code) {
+  if(target==='pat') { document.getElementById('pat-search').value=code; filterPatrimonio(); switchTab('patrimonio',document.getElementById('tab-pat')); }
+  else { document.getElementById('alm-search').value=code; filterEstoque(); switchTab('almoxarifado',document.getElementById('tab-alm')); }
+  toast('✅ Código lido: '+code,'ok');
+}
+
+// ════════════════════════════════════════════════════════════
+//  START
+// ════════════════════════════════════════════════════════════
+initApp();
+</script>
+
+<!-- RODAPÉ -->
+<footer style="background:var(--surface);border-top:1px solid var(--border);padding:14px 20px;text-align:center;margin-top:20px">
+  <p style="font-size:0.78rem;color:var(--text3);font-weight:500">Sistema desenvolvido por <span style="color:var(--orange);font-weight:700">Leandro Machado</span> · <span style="color:var(--text3)">Supabase integrado</span></p>
+</footer>
+
+</body>
+</html>
