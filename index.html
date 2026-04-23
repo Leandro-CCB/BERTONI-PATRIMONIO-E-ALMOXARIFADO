@@ -70,9 +70,26 @@ body { font-family: 'DM Sans', sans-serif; background: linear-gradient(160deg, #
 .home-footer { margin-top: 40px; font-size: 0.72rem; color: rgba(255,255,255,0.35); text-align: center; }
 
 /* ── FOTO REMOVER ── */
-.foto-actions { display: flex; gap: 8px; margin-top: 8px; }
+.foto-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .btn-remove-foto { background: var(--red-soft); color: var(--red); border: 1px solid rgba(220,38,38,0.25); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
 .btn-remove-foto:hover { background: var(--red); color: #fff; }
+.btn-edit-foto { background: var(--blue-soft); color: var(--blue); border: 1px solid rgba(96,165,250,0.25); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.btn-edit-foto:hover { background: var(--blue); color: #fff; }
+
+/* ── EDITOR DE FOTO ── */
+#photo-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 600; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+#photo-editor-overlay.open { display: flex; }
+.photo-editor-box { background: #1e2542; border-radius: 16px; padding: 20px; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 14px; }
+.photo-editor-title { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; text-align: center; }
+.photo-editor-canvas-wrap { width: 100%; background: #000; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 200px; }
+#photo-editor-canvas { max-width: 100%; display: block; }
+.photo-editor-controls { display: flex; flex-direction: column; gap: 10px; }
+.photo-editor-row { display: flex; gap: 8px; align-items: center; }
+.photo-editor-row label { font-size: 0.75rem; color: rgba(255,255,255,0.55); font-weight: 600; min-width: 70px; }
+.photo-editor-row input[type=range] { flex: 1; accent-color: var(--orange); cursor: pointer; }
+.photo-editor-row span { font-size: 0.75rem; color: rgba(255,255,255,0.4); min-width: 32px; text-align: right; }
+.photo-editor-btns { display: flex; gap: 8px; }
+.photo-editor-btns .btn { flex: 1; justify-content: center; font-size: 0.82rem; }
 
 #loading-overlay p { font-size: 0.9rem; color: var(--text2); font-weight: 500; }
 #loading-overlay.hidden { display: none; }
@@ -125,7 +142,7 @@ body { font-family: 'DM Sans', sans-serif; background: linear-gradient(160deg, #
 
 /* ── TABLE ── */
 .section-title { font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px; }
-.table-wrap { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; backdrop-filter: blur(8px); }
+.table-wrap { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); border-radius: var(--radius); overflow-x: auto; margin-bottom: 20px; backdrop-filter: blur(8px); }
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 thead th { background: rgba(255,255,255,0.06); padding: 10px 14px; text-align: left; font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.5px; }
 tbody td { padding: 11px 14px; color: var(--text2); border-top: 1px solid rgba(255,255,255,0.07); }
@@ -246,9 +263,72 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
 #pz-title { font-weight: 800; font-size: 1rem; margin-bottom: 4px; }
 #pz-code  { font-size: .8rem; color: #555; margin-bottom: 6px; }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 600px) { .main { padding: 14px; } .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } .stat-card { padding: 12px; } .stat-value { font-size: 1.6rem; } .pat-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .btn-row { gap: 8px; } .btn { padding: 10px 12px; font-size: 0.82rem; } table { font-size: 0.8rem; } thead th, tbody td { padding: 8px 10px; } .tabs-nav { padding: 0 14px; overflow-x: auto; } .tab-btn { padding: 12px 14px; font-size: 0.82rem; } }
-@media (max-width: 380px) { .pat-grid { grid-template-columns: 1fr; } .stat-label { font-size: 0.68rem; } }
+/* ── RESPONSIVE / MOBILE PORTRAIT ── */
+@media (max-width: 600px) {
+  /* Layout base */
+  .main { padding: 12px; }
+  .tabs-nav { padding: 0 10px; overflow-x: auto; gap: 0; }
+  .tab-btn { padding: 11px 12px; font-size: 0.8rem; gap: 5px; }
+
+  /* Stats compactas */
+  .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 14px; }
+  .stat-card { padding: 10px 8px; }
+  .stat-label { font-size: 0.62rem; letter-spacing: 0.3px; margin-bottom: 4px; }
+  .stat-value { font-size: 1.45rem; }
+
+  /* Botões de ação */
+  .btn-row { gap: 7px; margin-bottom: 14px; }
+  .btn { padding: 10px 12px; font-size: 0.82rem; gap: 5px; }
+  .btn svg { width: 13px; height: 13px; }
+
+  /* Barra de busca */
+  .search-wrap { margin-bottom: 12px; }
+  .search-wrap input { font-size: 0.85rem; padding: 11px 46px 11px 40px; }
+
+  /* ── TABELAS → CARDS MOBILE ── */
+  .table-wrap { background: transparent !important; border: none !important; border-radius: 0 !important; overflow: visible !important; box-shadow: none !important; backdrop-filter: none !important; margin-bottom: 14px; }
+  .table-wrap table { display: block; width: 100%; }
+  .table-wrap thead { display: none !important; }
+  .table-wrap tbody { display: flex; flex-direction: column; gap: 9px; }
+  .table-wrap tbody tr {
+    display: block !important;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.11);
+    border-radius: 12px;
+    padding: 12px;
+    position: relative;
+  }
+  .table-wrap tbody tr.low-stock {
+    background: rgba(248,113,113,0.06);
+    border-color: rgba(248,113,113,0.30);
+  }
+  .table-wrap tbody tr:hover td { background: transparent; }
+  .table-wrap tbody td { display: block; padding: 0; border-top: none !important; }
+
+  /* Seção título */
+  .section-title { font-size: 0.72rem; margin-bottom: 8px; margin-top: 4px; }
+
+  /* Patrimônio list */
+  .pat-list-name { font-size: 0.85rem; }
+  .pat-list-sub { font-size: 0.72rem; }
+  .pat-list-item { padding: 10px 12px; gap: 10px; }
+  .pat-list-thumb { width: 44px; height: 44px; }
+
+  /* Alert banner */
+  .alert-banner { padding: 8px 14px; }
+  .alert-text { font-size: 0.78rem; }
+
+  /* Topbar */
+  .topbar { padding: 12px 14px; }
+  .topbar-title { font-size: 1rem; }
+}
+
+@media (max-width: 380px) {
+  .stat-label { font-size: 0.58rem; }
+  .stat-value { font-size: 1.3rem; }
+  .btn { padding: 9px 10px; font-size: 0.78rem; }
+  .main { padding: 10px; }
+}
 </style>
 </head>
 <body>
@@ -258,7 +338,7 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
 <!-- HOME SCREEN -->
 <div id="home-screen">
   <div class="home-logo-wrap">
-    <img id="home-logo-img" src="/logo.png" style="display:block" onerror="this.style.display='none';document.getElementById('home-logo-placeholder').style.display='flex'">
+    <img id="home-logo-img" src="https://raw.githubusercontent.com/Leandro-CCB/BERTONI-PATRIMONIO-E-ALMOXARIFADO/main/logo.png" style="display:block" onerror="this.style.display='none';document.getElementById('home-logo-placeholder').style.display='flex'">
     <div id="home-logo-placeholder" class="home-logo-placeholder" style="display:none">
       <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
     </div>
@@ -380,6 +460,28 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
 </div>
 </div>
 
+<!-- PHOTO EDITOR -->
+<div id="photo-editor-overlay">
+  <div class="photo-editor-box">
+    <div class="photo-editor-title">✂️ Ajustar Foto</div>
+    <div class="photo-editor-canvas-wrap"><canvas id="photo-editor-canvas"></canvas></div>
+    <div class="photo-editor-controls">
+      <div class="photo-editor-row"><label>Girar</label><input type="range" id="pe-rotate" min="-180" max="180" value="0" oninput="peUpdate()"><span id="pe-rotate-val">0°</span></div>
+      <div class="photo-editor-row"><label>Zoom</label><input type="range" id="pe-zoom" min="50" max="200" value="100" oninput="peUpdate()"><span id="pe-zoom-val">100%</span></div>
+      <div class="photo-editor-row"><label>Brilho</label><input type="range" id="pe-bright" min="-100" max="100" value="0" oninput="peUpdate()"><span id="pe-bright-val">0</span></div>
+      <div class="photo-editor-row"><label>Contraste</label><input type="range" id="pe-contrast" min="-100" max="100" value="0" oninput="peUpdate()"><span id="pe-contrast-val">0</span></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-ghost" onclick="peFlipH()" style="flex:1;justify-content:center">↔️ Espelhar</button>
+      <button class="btn btn-ghost" onclick="peReset()" style="flex:1;justify-content:center">🔄 Resetar</button>
+    </div>
+    <div class="photo-editor-btns">
+      <button class="btn btn-ghost" onclick="peCancelar()">Cancelar</button>
+      <button class="btn btn-orange" onclick="peConfirmar()">✅ Usar esta foto</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAIS -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modal-box">
@@ -409,9 +511,20 @@ const HEADERS = {
 };
 
 // ── Helpers REST ─────────────────────────────────────────────
+function schemaHeaders(schema, extra = {}) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Accept-Profile': schema,
+    'Content-Profile': schema,
+    ...extra
+  };
+}
+
 async function sbGet(schema, table, params = '') {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${params}`, {
-    headers: { ...HEADERS, 'Accept-Profile': schema }
+    headers: schemaHeaders(schema)
   });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
@@ -420,7 +533,7 @@ async function sbGet(schema, table, params = '') {
 async function sbPost(schema, table, body) {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
     method: 'POST',
-    headers: { ...HEADERS, 'Content-Profile': schema },
+    headers: schemaHeaders(schema, { 'Prefer': 'return=representation' }),
     body: JSON.stringify(body)
   });
   if (!r.ok) throw new Error(await r.text());
@@ -430,7 +543,7 @@ async function sbPost(schema, table, body) {
 async function sbPatch(schema, table, filter, body) {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`, {
     method: 'PATCH',
-    headers: { ...HEADERS, 'Content-Profile': schema },
+    headers: schemaHeaders(schema, { 'Prefer': 'return=representation' }),
     body: JSON.stringify(body)
   });
   if (!r.ok) throw new Error(await r.text());
@@ -440,9 +553,12 @@ async function sbPatch(schema, table, filter, body) {
 async function sbDelete(schema, table, filter) {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`, {
     method: 'DELETE',
-    headers: { ...HEADERS, 'Content-Profile': schema }
+    headers: schemaHeaders(schema, { 'Prefer': 'return=minimal' })
   });
-  if (!r.ok) throw new Error(await r.text());
+  if (!r.ok) {
+    const msg = await r.text();
+    throw new Error(`DELETE ${table} falhou (${r.status}): ${msg}`);
+  }
   return true;
 }
 
@@ -475,7 +591,7 @@ async function initApp() {
     ]);
     estoque    = itens;
     historico  = movs.map(m => ({ dbId: m.id, dt: new Date(m.criado_em).toLocaleDateString('pt-BR'), item: m.item_nome, tipo: m.tipo, qtd: m.qtd, resp: m.responsavel, obs: m.obs||'' }));
-    patrimonio = bens.map(b => ({ id: b.id, desc: b.descricao, sala: b.sala, resp: b.responsavel, status: b.status, obs: b.obs||'', dt: b.dt_cadastro, foto: b.foto_url||null }));
+    patrimonio = bens.map(b => ({ id: b.id, desc: b.descricao, sala: b.sala, resp: b.responsavel, status: b.status, obs: b.obs||'', dt: b.dt_cadastro, foto: b.foto_url||null, valor: b.valor_medio||null }));
     setSyncing('ok');
   } catch(e) {
     console.error('Init error:', e);
@@ -600,15 +716,45 @@ function showAlertDetail() { document.querySelectorAll('.tab-btn')[0].click(); d
 // ════════════════════════════════════════════════════════════
 //  RENDER ESTOQUE
 // ════════════════════════════════════════════════════════════
+function isMobile() { return window.innerWidth <= 600; }
+
 function renderEstoque() {
   const q = (document.getElementById('alm-search')||{value:''}).value.trim().toLowerCase();
   const lista = q ? estoque.filter(i=>i.id.toLowerCase().includes(q)||i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q)||i.local.toLowerCase().includes(q)) : estoque;
   const tbody = document.getElementById('tbl-estoque');
-  tbody.innerHTML = lista.map(i => {
-    const low=i.qtd<i.minimo&&i.qtd>0; const empty=i.qtd===0;
-    const cls=empty||low?'low-stock':''; const badgeCls=empty?'qty-empty':low?'qty-low':'qty-ok';
-    return `<tr class="${cls}"><td style="color:var(--blue);font-weight:600;font-size:0.8rem">${i.id}</td><td style="color:var(--text);font-weight:500">${i.nome}</td><td>${i.categoria}</td><td><span class="qty-badge ${badgeCls}">${i.qtd} ${i.un}</span></td><td>${i.local}</td><td><div style="display:flex;gap:5px"><button class="btn btn-ghost" style="padding:4px 9px;font-size:0.75rem" onclick="editarAlm('${i.id}')">✏️</button><button class="btn" style="padding:4px 9px;font-size:0.75rem;background:var(--red-soft);color:var(--red);border:1px solid rgba(220,38,38,0.2)" onclick="confirmarExcluirAlm('${i.id}')">🗑</button></div></td></tr>`;
-  }).join('');
+
+  if(isMobile()) {
+    // ── MOBILE: cards nativos sem tabela ──
+    tbody.closest('.table-wrap').style.cssText = 'background:transparent;border:none;overflow:visible;margin-bottom:14px';
+    tbody.innerHTML = lista.map(i => {
+      const low=i.qtd<i.minimo&&i.qtd>0; const empty=i.qtd===0;
+      const badgeCls=empty?'qty-empty':low?'qty-low':'qty-ok';
+      const cardBorder=empty||low?'border-color:rgba(248,113,113,0.35);background:rgba(248,113,113,0.05)':'';
+      return `<tr class="${empty||low?'low-stock':''}" style="${cardBorder}">
+        <td style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0">
+          <span style="font-size:0.7rem;font-weight:700;color:var(--blue)">${i.id}</span>
+          <span class="qty-badge ${badgeCls}" style="font-size:0.8rem">${i.qtd} ${i.un}</span>
+        </td>
+        <td style="font-size:0.93rem;font-weight:600;color:var(--text);margin-bottom:4px;padding:0;display:block">${i.nome}</td>
+        <td style="display:flex;gap:10px;font-size:0.74rem;color:var(--text3);margin-bottom:0;padding:0">
+          <span>🏷 ${i.categoria}</span><span>📍 ${i.local}</span>
+        </td>
+        <td style="display:none"></td><td style="display:none"></td>
+        <td style="display:flex;gap:8px;margin-top:10px;padding:10px 0 0 0;border-top:1px solid rgba(255,255,255,0.08)">
+          <button class="btn btn-ghost" style="flex:1;justify-content:center;padding:8px;font-size:0.8rem" onclick="editarAlm('${i.id}')">✏️ Editar</button>
+          <button class="btn" style="flex:1;justify-content:center;padding:8px;font-size:0.8rem;background:var(--red-soft);color:var(--red);border:1px solid rgba(220,38,38,0.2)" onclick="confirmarExcluirAlm('${i.id}')">🗑 Excluir</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } else {
+    // ── DESKTOP: tabela normal ──
+    tbody.closest('.table-wrap').style.cssText = '';
+    tbody.innerHTML = lista.map(i => {
+      const low=i.qtd<i.minimo&&i.qtd>0; const empty=i.qtd===0;
+      const cls=empty||low?'low-stock':''; const badgeCls=empty?'qty-empty':low?'qty-low':'qty-ok';
+      return `<tr class="${cls}"><td style="color:var(--blue);font-weight:600;font-size:0.8rem">${i.id}</td><td style="color:var(--text);font-weight:500">${i.nome}</td><td>${i.categoria}</td><td><span class="qty-badge ${badgeCls}">${i.qtd} ${i.un}</span></td><td>${i.local}</td><td><div style="display:flex;gap:5px"><button class="btn btn-ghost" style="padding:4px 9px;font-size:0.75rem" onclick="editarAlm('${i.id}')">✏️</button><button class="btn" style="padding:4px 9px;font-size:0.75rem;background:var(--red-soft);color:var(--red);border:1px solid rgba(220,38,38,0.2)" onclick="confirmarExcluirAlm('${i.id}')">🗑</button></div></td></tr>`;
+    }).join('');
+  }
 }
 function filterEstoque() { renderEstoque(); }
 
@@ -617,20 +763,43 @@ function filterEstoque() { renderEstoque(); }
 // ════════════════════════════════════════════════════════════
 function renderHistorico() {
   const tbody = document.getElementById('tbl-historico');
-  tbody.innerHTML = [...historico].slice(0,8).map((h,idx)=>`
-    <tr>
-      <td>${h.dt}</td>
-      <td style="color:var(--text);font-weight:500">${h.item}</td>
-      <td class="${h.tipo==='Entrada'?'type-entrada':'type-saida'}">${h.tipo}</td>
-      <td>${h.qtd}</td>
-      <td>${h.resp}</td>
-      <td>
-        <div style="display:flex;gap:5px">
-          <button class="btn btn-ghost" style="padding:4px 9px;font-size:0.75rem" title="Editar movimentação" onclick="editarMov(${idx})">✏️</button>
-          <button class="btn" style="padding:4px 9px;font-size:0.75rem;background:var(--red-soft);color:var(--red);border:1px solid rgba(248,113,113,0.25)" title="Excluir movimentação" onclick="excluirMov(${idx})">🗑</button>
-        </div>
-      </td>
-    </tr>`).join('');
+  const slice = [...historico].slice(0,8);
+
+  if(isMobile()) {
+    tbody.closest('.table-wrap').style.cssText = 'background:transparent;border:none;overflow:visible;margin-bottom:14px';
+    tbody.innerHTML = slice.map((h,idx)=>`
+      <tr>
+        <td style="display:flex;justify-content:space-between;align-items:center;padding:0;margin-bottom:4px">
+          <span style="font-size:0.7rem;color:var(--text3)">${h.dt}</span>
+          <span class="${h.tipo==='Entrada'?'type-entrada':'type-saida'}" style="font-size:0.78rem;font-weight:700">${h.tipo}</span>
+        </td>
+        <td style="font-size:0.9rem;font-weight:600;color:var(--text);display:block;padding:0;margin-bottom:4px">${h.item}</td>
+        <td style="display:flex;gap:10px;font-size:0.75rem;color:var(--text3);padding:0">
+          <span>📦 ${h.qtd} un.</span><span>👤 ${h.resp}</span>
+        </td>
+        <td style="display:none"></td><td style="display:none"></td>
+        <td style="display:flex;gap:8px;margin-top:10px;padding:10px 0 0 0;border-top:1px solid rgba(255,255,255,0.08)">
+          <button class="btn btn-ghost" style="flex:1;justify-content:center;padding:8px;font-size:0.8rem" onclick="editarMov(${idx})">✏️ Editar</button>
+          <button class="btn" style="flex:1;justify-content:center;padding:8px;font-size:0.8rem;background:var(--red-soft);color:var(--red);border:1px solid rgba(248,113,113,0.25)" onclick="excluirMov(${idx})">🗑 Excluir</button>
+        </td>
+      </tr>`).join('');
+  } else {
+    tbody.closest('.table-wrap').style.cssText = '';
+    tbody.innerHTML = slice.map((h,idx)=>`
+      <tr>
+        <td>${h.dt}</td>
+        <td style="color:var(--text);font-weight:500">${h.item}</td>
+        <td class="${h.tipo==='Entrada'?'type-entrada':'type-saida'}">${h.tipo}</td>
+        <td>${h.qtd}</td>
+        <td>${h.resp}</td>
+        <td>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-ghost" style="padding:4px 9px;font-size:0.75rem" title="Editar movimentação" onclick="editarMov(${idx})">✏️</button>
+            <button class="btn" style="padding:4px 9px;font-size:0.75rem;background:var(--red-soft);color:var(--red);border:1px solid rgba(248,113,113,0.25)" title="Excluir movimentação" onclick="excluirMov(${idx})">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -688,21 +857,33 @@ function excluirMov(idx) {
 async function confirmarExcluirMov(idx) {
   const h = historico[idx]; if(!h) return;
   setSyncing('syncing');
+  document.getElementById('modal-overlay').classList.remove('open');
+
   try {
-    if(h.dbId) await sbDelete('almoxarifado','movimentacoes',`id=eq.${h.dbId}`);
-    // Reverter o estoque automaticamente
+    // 1. Reverter estoque no banco
     const item = estoque.find(i => i.nome === h.item);
     if(item) {
-      const novaQtd = h.tipo === 'Entrada' ? item.qtd - h.qtd : item.qtd + h.qtd;
-      const qtdFinal = Math.max(0, novaQtd);
-      await sbPatch('almoxarifado','itens',`id=eq.${item.id}`,{ qtd: qtdFinal });
+      const qtdFinal = Math.max(0, h.tipo === 'Entrada' ? item.qtd - h.qtd : item.qtd + h.qtd);
+      await sbPatch('almoxarifado', 'itens', `id=eq.${item.id}`, { qtd: qtdFinal });
       item.qtd = qtdFinal;
     }
+
+    // 2. Deletar movimentação
+    await sbDelete('almoxarifado', 'movimentacoes', `id=eq.${h.dbId}`);
+
     historico.splice(idx, 1);
-    renderEstoque(); renderHistorico(); updateAlerts(); setSyncing('ok');
-    document.getElementById('modal-overlay').classList.remove('open');
-    toast('🗑 Movimentação excluída e estoque revertido!','ok');
-  } catch(e) { setSyncing('error'); toast('❌ Erro ao excluir: '+e.message,'error'); }
+    renderEstoque(); renderHistorico(); updateAlerts();
+    setSyncing('ok');
+    toast('✅ Movimentação excluída e estoque revertido!', 'ok');
+  } catch(e) {
+    setSyncing('error');
+    // Mostra o erro completo na tela para diagnóstico
+    openGenericModal('❌ Erro ao excluir',
+      `<p style="color:#dc2626;font-size:0.88rem;font-family:monospace;background:#fef2f2;padding:12px;border-radius:8px;border:1px solid #fecaca;word-break:break-all">${e.message}</p>
+       <p style="color:#4a5568;font-size:0.82rem;margin-top:12px">Se o erro for <strong>42501</strong> (permission denied), é necessário habilitar DELETE via RLS no Supabase para a tabela <code>movimentacoes</code>.</p>`,
+      `<button class="btn btn-ghost" onclick="closeModal()">Fechar</button>`
+    );
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -724,7 +905,7 @@ function renderPatrimonio(list) {
     resultZone.innerHTML = `<div class="pat-result-card"><div class="pat-result-header">📋 Cadastro de Patrimônio</div><div class="pat-result-body"><div class="pat-result-img">${exact.foto?`<img src="${exact.foto}" alt="${exact.desc}">`:`<div class="pat-result-img-placeholder"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Sem foto</span></div>`}</div><div class="pat-result-info"><div class="pat-result-name">${exact.desc}</div><div class="pat-result-meta"><span>Código:</span> ${exact.id}<br><span>Local:</span> ${exact.sala}<br><span>Responsável:</span> ${exact.resp}<br><span>Status:</span> <span class="status-badge ${statusClass(exact.status)}" style="margin-top:0">${exact.status}</span></div></div></div><div class="pat-barcodes"><div class="barcode-tag"><svg id="bc-result-1"></svg><div class="barcode-tag-label">Patrimônio: ${exact.id}</div></div></div><div class="pat-result-actions"><button class="btn btn-orange" onclick="gerarEtiqueta('${exact.id}')">🏷 Gerar Etiqueta</button><button class="btn btn-blue" onclick="openPatDetail('${exact.id}')">🔍 Ver Detalhes</button><button class="btn btn-ghost" onclick="editarPat('${exact.id}')">✏️ Editar</button></div></div>`;
     setTimeout(()=>{ try{JsBarcode('#bc-result-1',exact.id,{format:'CODE128',width:1.8,height:44,displayValue:true,fontSize:10,margin:4,background:'#ffffff',lineColor:'#1a1f36'});}catch(e){} },60);
   } else { resultZone.innerHTML=''; }
-  grid.innerHTML = list.map(p=>`<div class="pat-list-item" onclick="openPatDetail('${p.id}')"><div class="pat-list-thumb">${p.foto?`<img src="${p.foto}" alt="${p.desc}">`:`<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`}</div><div class="pat-list-info"><div class="pat-list-id">${p.id}</div><div class="pat-list-name">${p.desc}</div><div class="pat-list-sub">📍 ${p.sala} &nbsp;•&nbsp; 👤 ${p.resp}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="status-badge ${statusClass(p.status)}" style="margin:0">${p.status}</span><div style="display:flex;gap:6px"><button class="btn btn-ghost" style="padding:5px 10px;font-size:0.75rem" onclick="event.stopPropagation();gerarEtiqueta('${p.id}')">🏷</button><button class="btn btn-ghost" style="padding:5px 10px;font-size:0.75rem" onclick="event.stopPropagation();editarPat('${p.id}')">✏️</button></div></div></div>`).join('');
+  grid.innerHTML = list.map(p=>`<div class="pat-list-item" onclick="openPatDetail('${p.id}')"><div class="pat-list-thumb">${p.foto?`<img src="${p.foto}" alt="${p.desc}">`:`<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`}</div><div class="pat-list-info"><div class="pat-list-id">${p.id}</div><div class="pat-list-name">${p.desc}</div><div class="pat-list-sub">📍 ${p.sala} &nbsp;•&nbsp; 👤 ${p.resp}${p.valor!=null?` &nbsp;•&nbsp; 💰 R$ ${Number(p.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}`:''}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="status-badge ${statusClass(p.status)}" style="margin:0">${p.status}</span><div style="display:flex;gap:6px"><button class="btn btn-ghost" style="padding:5px 10px;font-size:0.75rem" onclick="event.stopPropagation();editarPat('${p.id}')">✏️</button><button class="btn" style="padding:5px 10px;font-size:0.75rem;background:var(--red-soft);color:var(--red);border:1px solid rgba(248,113,113,0.25)" onclick="event.stopPropagation();confirmarExcluirPat('${p.id}')">🗑</button></div></div></div>`).join('');
   document.getElementById('pat-stat-total').textContent = patrimonio.length;
   document.getElementById('pat-stat-man').textContent   = patrimonio.filter(p=>p.status==='Em Manutenção').length;
   document.getElementById('pat-stat-ocioso').textContent= patrimonio.filter(p=>p.status==='Ocioso').length;
@@ -740,7 +921,7 @@ function filterPatrimonio() {
 // ════════════════════════════════════════════════════════════
 function openPatDetail(id) {
   const p = patrimonio.find(x=>x.id===id); if(!p) return;
-  openGenericModal('Detalhes do Patrimônio',`<div class="pat-detail-photo">${p.foto?`<img src="${p.foto}" alt="${p.desc}">`:`<div style="text-align:center;color:var(--text3)"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div style="margin-top:6px;font-size:0.8rem">Sem foto cadastrada</div></div>`}</div><div class="pat-info-grid"><div class="pat-info-item"><div class="pat-info-label">Código</div><div class="pat-info-value" style="color:var(--orange);font-weight:700">${p.id}</div></div><div class="pat-info-item"><div class="pat-info-label">Status</div><div class="pat-info-value"><span class="status-badge ${statusClass(p.status)}">${p.status}</span></div></div><div class="pat-info-item"><div class="pat-info-label">Local</div><div class="pat-info-value">${p.sala}</div></div><div class="pat-info-item"><div class="pat-info-label">Responsável</div><div class="pat-info-value">${p.resp}</div></div><div class="pat-info-item" style="grid-column:1/-1"><div class="pat-info-label">Descrição</div><div class="pat-info-value">${p.desc}</div></div><div class="pat-info-item"><div class="pat-info-label">Data Cadastro</div><div class="pat-info-value">${p.dt||'—'}</div></div>${p.obs?`<div class="pat-info-item" style="grid-column:1/-1"><div class="pat-info-label">Observações</div><div class="pat-info-value" style="font-size:0.85rem;color:var(--text2);background:var(--surface2);border-radius:8px;padding:10px;margin-top:2px;border:1px solid var(--border)">${p.obs}</div></div>`:''}</div><div class="barcode-wrap"><svg id="bc-detail"></svg><div class="barcode-id">${p.id}</div></div>`,
+  openGenericModal('Detalhes do Patrimônio',`<div class="pat-detail-photo">${p.foto?`<img src="${p.foto}" alt="${p.desc}">`:`<div style="text-align:center;color:var(--text3)"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div style="margin-top:6px;font-size:0.8rem">Sem foto cadastrada</div></div>`}</div><div class="pat-info-grid"><div class="pat-info-item"><div class="pat-info-label">Código</div><div class="pat-info-value" style="color:var(--orange);font-weight:700">${p.id}</div></div><div class="pat-info-item"><div class="pat-info-label">Status</div><div class="pat-info-value"><span class="status-badge ${statusClass(p.status)}">${p.status}</span></div></div><div class="pat-info-item"><div class="pat-info-label">Local</div><div class="pat-info-value">${p.sala}</div></div><div class="pat-info-item"><div class="pat-info-label">Responsável</div><div class="pat-info-value">${p.resp}</div></div><div class="pat-info-item" style="grid-column:1/-1"><div class="pat-info-label">Descrição</div><div class="pat-info-value">${p.desc}</div></div><div class="pat-info-item"><div class="pat-info-label">Data Cadastro</div><div class="pat-info-value">${p.dt||'—'}</div></div>${p.valor!=null?`<div class="pat-info-item"><div class="pat-info-label">💰 Valor Médio</div><div class="pat-info-value" style="color:var(--green);font-weight:700">R$ ${Number(p.valor).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>`:''}${p.obs?`<div class="pat-info-item" style="grid-column:1/-1"><div class="pat-info-label">Observações</div><div class="pat-info-value" style="font-size:0.85rem;color:var(--text2);background:var(--surface2);border-radius:8px;padding:10px;margin-top:2px;border:1px solid var(--border)">${p.obs}</div></div>`:''}</div><div class="barcode-wrap"><svg id="bc-detail"></svg><div class="barcode-id">${p.id}</div></div>`,
   `<button class="btn btn-ghost" onclick="closeModal()">Fechar</button><button class="btn btn-orange" onclick="gerarEtiqueta('${p.id}');closeModal()">🏷 Imprimir Etiqueta</button>`);
   setTimeout(()=>{ try{JsBarcode('#bc-detail',p.id,{format:'CODE128',width:1.5,height:40,displayValue:false,margin:2,background:'transparent',lineColor:'#1a1f36'});}catch(e){} },60);
 }
@@ -785,7 +966,7 @@ function openModal(type) {
   if(type==='addPat') {
     tempPhotoData = null;
     openGenericModal('+ Novo Patrimônio',
-      `<div class="form-grid"><div class="form-group form-full"><label>Descrição</label><input type="text" id="pat-desc" placeholder="Ex: Notebook Dell Latitude"></div><div class="form-group"><label>Local / Sala</label><input type="text" id="pat-sala" placeholder="Ex: Sala 101"></div><div class="form-group"><label>Responsável</label><input type="text" id="pat-resp" placeholder="Nome completo"></div><div class="form-group form-full"><label>Status</label><select id="pat-status"><option>Ativo</option><option>Em Uso</option><option>Em Manutenção</option><option>Ocioso</option></select></div><div class="form-group form-full"><label>Observações</label><textarea id="pat-obs" placeholder="Informações adicionais..." style="min-height:80px"></textarea></div><div class="form-group form-full"><label>📷 Foto do Item</label><div class="photo-upload-area"><input type="file" id="pat-photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'pat-preview')"><img id="pat-preview" class="photo-preview"><div class="photo-upload-text" id="pat-upload-text"><strong>📷 Tirar Foto ou Selecionar Imagem</strong>A foto aparecerá no card do patrimônio</div></div></div></div>`,
+      `<div class="form-grid"><div class="form-group form-full"><label>Descrição</label><input type="text" id="pat-desc" placeholder="Ex: Notebook Dell Latitude"></div><div class="form-group"><label>Local / Sala</label><input type="text" id="pat-sala" placeholder="Ex: Sala 101"></div><div class="form-group"><label>Responsável</label><input type="text" id="pat-resp" placeholder="Nome completo"></div><div class="form-group"><label>Status</label><select id="pat-status"><option>Ativo</option><option>Em Uso</option><option>Em Manutenção</option><option>Ocioso</option></select></div><div class="form-group"><label>💰 Valor Médio (R$)</label><input type="number" id="pat-valor" min="0" step="0.01" placeholder="0,00" inputmode="decimal"></div><div class="form-group form-full"><label>Observações</label><textarea id="pat-obs" placeholder="Informações adicionais..." style="min-height:80px"></textarea></div><div class="form-group form-full"><label>📷 Foto do Item</label><div class="photo-upload-area"><input type="file" id="pat-photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'pat-preview')"><img id="pat-preview" class="photo-preview"><div class="photo-upload-text" id="pat-upload-text"><strong>📷 Tirar Foto ou Selecionar Imagem</strong>A foto aparecerá no card do patrimônio</div></div></div></div>`,
       `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-orange" onclick="submitAddPat()">+ Cadastrar Patrimônio</button>`
     ); return;
   }
@@ -794,35 +975,138 @@ function openModal(type) {
 // ════════════════════════════════════════════════════════════
 //  FOTO — compressão JPEG via Canvas (máx 800px, qualidade 60%)
 // ════════════════════════════════════════════════════════════
+let peSourceImage = null; // imagem original para o editor
+let pePreviewId   = null; // ID do preview que será atualizado
+let peFlipped     = false;
+
 function handlePhoto(event, previewId) {
   const file = event.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 800;
-      let w = img.width, h = img.height;
-      if(w > MAX || h > MAX) {
-        if(w > h) { h = Math.round(h * MAX / w); w = MAX; }
-        else       { w = Math.round(w * MAX / h); h = MAX; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const compressed = canvas.toDataURL('image/jpeg', 0.60);
-      const before = Math.round(e.target.result.length / 1024);
-      const after  = Math.round(compressed.length / 1024);
-      tempPhotoData = compressed;
-      const preview = document.getElementById(previewId);
-      const textEl  = document.getElementById(previewId.replace('preview','upload-text'));
-      preview.src = compressed; preview.style.display='block';
-      if(textEl) textEl.style.display='none';
-      toast(`📷 Foto comprimida: ${before}KB → ${after}KB`, 'ok');
+      // Guarda imagem original e abre editor
+      peSourceImage = img;
+      pePreviewId   = previewId;
+      peFlipped     = false;
+      abrirEditorFotoComImagem(img, previewId);
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
+
+function abrirEditorFoto(previewId) {
+  // Abrir editor com foto já existente (tempPhotoData)
+  if(!tempPhotoData) return;
+  const img = new Image();
+  img.onload = () => {
+    peSourceImage = img;
+    pePreviewId   = previewId;
+    peFlipped     = false;
+    abrirEditorFotoComImagem(img, previewId);
+  };
+  img.src = tempPhotoData;
+}
+
+function abrirEditorFotoComImagem(img, previewId) {
+  peSourceImage = img;
+  pePreviewId   = previewId;
+  // Resetar controles
+  document.getElementById('pe-rotate').value  = 0;
+  document.getElementById('pe-zoom').value    = 100;
+  document.getElementById('pe-bright').value  = 0;
+  document.getElementById('pe-contrast').value= 0;
+  peFlipped = false;
+  document.getElementById('photo-editor-overlay').classList.add('open');
+  peUpdate();
+}
+
+function peUpdate() {
+  const angle    = parseInt(document.getElementById('pe-rotate').value)||0;
+  const zoom     = parseInt(document.getElementById('pe-zoom').value)||100;
+  const bright   = parseInt(document.getElementById('pe-bright').value)||0;
+  const contrast = parseInt(document.getElementById('pe-contrast').value)||0;
+  document.getElementById('pe-rotate-val').textContent  = angle + '°';
+  document.getElementById('pe-zoom-val').textContent    = zoom + '%';
+  document.getElementById('pe-bright-val').textContent  = bright;
+  document.getElementById('pe-contrast-val').textContent= contrast;
+
+  if(!peSourceImage) return;
+  const src = peSourceImage;
+  const MAX = 480;
+  // Determinar dimensões base
+  const rad  = angle * Math.PI / 180;
+  const scale = zoom / 100;
+  // Canvas de saída 4:3
+  const outW = MAX, outH = Math.round(MAX * 3 / 4);
+  const canvas = document.getElementById('photo-editor-canvas');
+  canvas.width  = outW;
+  canvas.height = outH;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, outW, outH);
+  ctx.save();
+  ctx.translate(outW/2, outH/2);
+  if(peFlipped) ctx.scale(-1, 1);
+  ctx.rotate(rad);
+  ctx.scale(scale, scale);
+  const drawW = src.width  > MAX ? MAX : src.width;
+  const drawH = src.height > MAX ? MAX : src.height;
+  const ratio = Math.min(outW / src.width, outH / src.height);
+  ctx.drawImage(src, -src.width*ratio/2, -src.height*ratio/2, src.width*ratio, src.height*ratio);
+  ctx.restore();
+  // Brilho e contraste via filter
+  canvas.style.filter = `brightness(${100+bright}%) contrast(${100+contrast}%)`;
+}
+
+function peFlipH() {
+  peFlipped = !peFlipped;
+  peUpdate();
+}
+
+function peReset() {
+  document.getElementById('pe-rotate').value  = 0;
+  document.getElementById('pe-zoom').value    = 100;
+  document.getElementById('pe-bright').value  = 0;
+  document.getElementById('pe-contrast').value= 0;
+  peFlipped = false;
+  peUpdate();
+}
+
+function peCancelar() {
+  document.getElementById('photo-editor-overlay').classList.remove('open');
+}
+
+function peConfirmar() {
+  const canvas = document.getElementById('photo-editor-canvas');
+  // Exportar com filtro aplicado via offscreen
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width  = canvas.width;
+  outCanvas.height = canvas.height;
+  const octx = outCanvas.getContext('2d');
+  const bright   = parseInt(document.getElementById('pe-bright').value)||0;
+  const contrast = parseInt(document.getElementById('pe-contrast').value)||0;
+  octx.filter = `brightness(${100+bright}%) contrast(${100+contrast}%)`;
+  octx.drawImage(canvas, 0, 0);
+  const compressed = outCanvas.toDataURL('image/jpeg', 0.72);
+  tempPhotoData = compressed;
+  // Atualizar preview no formulário
+  const preview = document.getElementById(pePreviewId);
+  if(preview) { preview.src = compressed; preview.style.display = 'block'; }
+  const textEl = document.getElementById((pePreviewId||'').replace('preview','upload-text'));
+  if(textEl) textEl.style.display = 'none';
+  // Mostrar/atualizar botões de ação da foto
+  const existingActions = preview && preview.closest('.form-group') && preview.closest('.form-group').querySelector('.foto-actions');
+  if(!existingActions && preview) {
+    const div = document.createElement('div');
+    div.className = 'foto-actions';
+    div.innerHTML = `<button type="button" class="btn-edit-foto" onclick="abrirEditorFoto('${pePreviewId}')">✂️ Ajustar foto</button><button type="button" class="btn-remove-foto" onclick="removerFotoEdit()">🗑 Remover foto</button>`;
+    preview.closest('.form-group').appendChild(div);
+  }
+  document.getElementById('photo-editor-overlay').classList.remove('open');
+  toast('✅ Foto ajustada e aplicada!', 'ok');
+}
+
 
 // ════════════════════════════════════════════════════════════
 //  SUBMIT MOVIMENTAÇÃO
@@ -883,13 +1167,14 @@ async function submitAddPat() {
   const resp   = document.getElementById('pat-resp').value.trim();
   const status = document.getElementById('pat-status').value;
   const obs    = document.getElementById('pat-obs').value.trim();
+  const valor  = parseFloat(document.getElementById('pat-valor').value)||null;
   if(!desc) { toast('❌ Informe a descrição.','error'); return; }
   setSyncing('syncing');
   try {
     const id = await nextPatId();
     const dtHoje = new Date().toISOString().slice(0,10);
-    await sbPost('patrimonio','bens',{ id, descricao: desc, sala: sala||'—', responsavel: resp||'—', status, obs: obs||null, foto_url: tempPhotoData||null, dt_cadastro: dtHoje });
-    patrimonio.push({ id, desc, sala: sala||'—', resp: resp||'—', status, obs, dt: dtHoje, foto: tempPhotoData||null });
+    await sbPost('patrimonio','bens',{ id, descricao: desc, sala: sala||'—', responsavel: resp||'—', status, obs: obs||null, foto_url: tempPhotoData||null, dt_cadastro: dtHoje, valor_medio: valor });
+    patrimonio.push({ id, desc, sala: sala||'—', resp: resp||'—', status, obs, dt: dtHoje, foto: tempPhotoData||null, valor });
     renderPatrimonio(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
     toast(`✅ Patrimônio cadastrado: ${id}`,'ok');
@@ -958,8 +1243,9 @@ function editarPat(id) {
   const p = patrimonio.find(x=>x.id===id); if(!p) return;
   tempPhotoData = p.foto || null;
   const fotoAtual = tempPhotoData;
+  const valorAtual = p.valor != null ? p.valor : '';
   openGenericModal(`Editar Patrimônio ${p.id}`,
-    `<div class="form-grid"><div class="form-group"><label>Numeração (Código)</label><input type="text" id="ep-id" value="${p.id}" style="font-weight:700;color:var(--orange);letter-spacing:1px"></div><div class="form-group form-full" style="grid-column:unset"><label>Descrição</label><input type="text" id="ep-desc" value="${p.desc}"></div><div class="form-group"><label>Local / Sala</label><input type="text" id="ep-sala" value="${p.sala}"></div><div class="form-group"><label>Responsável</label><input type="text" id="ep-resp" value="${p.resp}"></div><div class="form-group form-full"><label>Status</label><select id="ep-status">${['Ativo','Em Uso','Em Manutenção','Ocioso'].map(s=>`<option ${s===p.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="form-group form-full"><label>Observações</label><textarea id="ep-obs" style="min-height:80px">${p.obs||''}</textarea></div><div class="form-group form-full"><label>📷 Foto do Item</label><div class="photo-upload-area"><input type="file" id="ep-photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'ep-preview')"><img id="ep-preview" class="photo-preview" ${fotoAtual?`src="${fotoAtual}" style="display:block"`:''}><div class="photo-upload-text" id="ep-upload-text" ${fotoAtual?'style="display:none"':''}><strong>📷 Alterar Foto</strong>Toque para tirar nova foto</div></div>${fotoAtual?`<div class="foto-actions"><button type="button" class="btn-remove-foto" onclick="removerFotoEdit()">🗑 Remover foto atual</button></div>`:''}</div></div>`,
+    `<div class="form-grid"><div class="form-group"><label>Numeração (Código)</label><input type="text" id="ep-id" value="${p.id}" style="font-weight:700;color:var(--orange);letter-spacing:1px"></div><div class="form-group form-full" style="grid-column:unset"><label>Descrição</label><input type="text" id="ep-desc" value="${p.desc}"></div><div class="form-group"><label>Local / Sala</label><input type="text" id="ep-sala" value="${p.sala}"></div><div class="form-group"><label>Responsável</label><input type="text" id="ep-resp" value="${p.resp}"></div><div class="form-group"><label>Status</label><select id="ep-status">${['Ativo','Em Uso','Em Manutenção','Ocioso'].map(s=>`<option ${s===p.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="form-group"><label>💰 Valor Médio (R$)</label><input type="number" id="ep-valor" min="0" step="0.01" value="${valorAtual}" placeholder="0,00" inputmode="decimal"></div><div class="form-group form-full"><label>Observações</label><textarea id="ep-obs" style="min-height:80px">${p.obs||''}</textarea></div><div class="form-group form-full"><label>📷 Foto do Item</label><div class="photo-upload-area"><input type="file" id="ep-photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'ep-preview')"><img id="ep-preview" class="photo-preview" ${fotoAtual?`src="${fotoAtual}" style="display:block"`:''}><div class="photo-upload-text" id="ep-upload-text" ${fotoAtual?'style="display:none"':''}><strong>📷 Alterar Foto</strong>Toque para tirar nova foto</div></div>${fotoAtual?`<div class="foto-actions"><button type="button" class="btn-edit-foto" onclick="abrirEditorFoto('ep-preview')">✂️ Ajustar foto</button><button type="button" class="btn-remove-foto" onclick="removerFotoEdit()">🗑 Remover foto</button></div>`:''}</div></div>`,
     `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-orange" onclick="salvarEditPat('${id}')">💾 Salvar</button>`
   );
 }
@@ -967,13 +1253,15 @@ function editarPat(id) {
 async function salvarEditPat(id) {
   const p = patrimonio.find(x=>x.id===id); if(!p) return;
   const novoId = document.getElementById('ep-id').value.trim().toUpperCase() || p.id;
+  const valorInput = parseFloat(document.getElementById('ep-valor').value);
   const updates = {
     descricao:   document.getElementById('ep-desc').value.trim() || p.desc,
     sala:        document.getElementById('ep-sala').value.trim() || p.sala,
     responsavel: document.getElementById('ep-resp').value.trim() || p.resp,
     status:      document.getElementById('ep-status').value,
     obs:         document.getElementById('ep-obs').value.trim() || null,
-    foto_url:    tempPhotoData || p.foto || null
+    foto_url:    tempPhotoData || p.foto || null,
+    valor_medio: isNaN(valorInput) ? null : valorInput
   };
   // Se o ID mudou, precisa deletar e reinserir (PK não pode ser alterada via PATCH)
   setSyncing('syncing');
@@ -981,7 +1269,7 @@ async function salvarEditPat(id) {
     if(novoId !== id) {
       const existe = patrimonio.find(x=>x.id===novoId);
       if(existe) { toast('❌ Código ' + novoId + ' já está em uso.','error'); setSyncing('error'); return; }
-      await sbPost('patrimonio','bens',{ id: novoId, descricao: updates.descricao, sala: updates.sala, responsavel: updates.responsavel, status: updates.status, obs: updates.obs||null, foto_url: updates.foto_url||null, dt_cadastro: p.dt||new Date().toISOString().slice(0,10) });
+      await sbPost('patrimonio','bens',{ id: novoId, descricao: updates.descricao, sala: updates.sala, responsavel: updates.responsavel, status: updates.status, obs: updates.obs||null, foto_url: updates.foto_url||null, dt_cadastro: p.dt||new Date().toISOString().slice(0,10), valor_medio: updates.valor_medio });
       await sbDelete('patrimonio','bens',`id=eq.${id}`);
       p.id = novoId;
     } else {
@@ -993,6 +1281,7 @@ async function salvarEditPat(id) {
     p.status = updates.status;
     p.obs    = updates.obs||'';
     p.foto   = updates.foto_url;
+    p.valor  = updates.valor_medio;
     renderPatrimonio(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
     toast('✅ Patrimônio atualizado!','ok');
@@ -1000,8 +1289,30 @@ async function salvarEditPat(id) {
 }
 
 // ════════════════════════════════════════════════════════════
-//  GERAR ETIQUETA
+//  EXCLUIR PATRIMÔNIO
 // ════════════════════════════════════════════════════════════
+function confirmarExcluirPat(id) {
+  const p = patrimonio.find(x=>x.id===id); if(!p) return;
+  openGenericModal('⚠️ Excluir Patrimônio',
+    `<div style="text-align:center;padding:10px 0"><div style="width:56px;height:56px;background:var(--red-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.6rem">🗑</div><p style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px">Excluir "${p.desc}"?</p><p style="font-size:0.85rem;color:var(--text2);margin-bottom:20px">Esta ação não pode ser desfeita.</p><div class="form-group" style="text-align:left"><label style="color:var(--red)">Digite o código do patrimônio para confirmar</label><input type="text" id="confirm-excluir-pat-id" placeholder="${p.id}" style="border-color:var(--red)"></div></div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-red" onclick="executarExcluirPat('${id}')">🗑 Excluir Permanentemente</button>`
+  );
+}
+
+async function executarExcluirPat(id) {
+  const p = patrimonio.find(x=>x.id===id); if(!p) return;
+  if(document.getElementById('confirm-excluir-pat-id').value.trim().toUpperCase() !== p.id) { toast('❌ Código incorreto.','error'); return; }
+  setSyncing('syncing');
+  try {
+    await sbDelete('patrimonio','bens',`id=eq.${id}`);
+    patrimonio = patrimonio.filter(x=>x.id!==id);
+    renderPatrimonio(); setSyncing('ok');
+    document.getElementById('modal-overlay').classList.remove('open');
+    toast(`🗑 Patrimônio ${id} excluído.`,'ok');
+  } catch(e) { setSyncing('error'); toast('❌ Erro: '+e.message,'error'); }
+}
+
+
 function gerarEtiqueta(id) {
   const p = patrimonio.find(x=>x.id===id); if(!p) return;
   document.getElementById('pz-title').textContent = p.desc;
@@ -1102,6 +1413,13 @@ function removerFotoEdit() {
 // ════════════════════════════════════════════════════════════
 //  START
 // ════════════════════════════════════════════════════════════
+// Re-renderizar ao girar o celular
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => { renderEstoque(); renderHistorico(); }, 150);
+});
+
 initApp();
 </script>
 
