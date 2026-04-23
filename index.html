@@ -1173,7 +1173,10 @@ async function submitAddPat() {
   try {
     const id = await nextPatId();
     const dtHoje = new Date().toISOString().slice(0,10);
-    await sbPost('patrimonio','bens',{ id, descricao: desc, sala: sala||'—', responsavel: resp||'—', status, obs: obs||null, foto_url: tempPhotoData||null, dt_cadastro: dtHoje, valor_medio: valor });
+    // Payload principal sem valor_medio (que pode não existir ainda no banco)
+    await sbPost('patrimonio','bens',{ id, descricao: desc, sala: sala||'—', responsavel: resp||'—', status, obs: obs||null, foto_url: tempPhotoData||null, dt_cadastro: dtHoje });
+    // Tenta salvar valor_medio separadamente (ignora erro se coluna não existir)
+    if(valor !== null) { try { await sbPatch('patrimonio','bens',`id=eq.${id}`,{ valor_medio: valor }); } catch(e){} }
     patrimonio.push({ id, desc, sala: sala||'—', resp: resp||'—', status, obs, dt: dtHoje, foto: tempPhotoData||null, valor });
     renderPatrimonio(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
@@ -1254,26 +1257,32 @@ async function salvarEditPat(id) {
   const p = patrimonio.find(x=>x.id===id); if(!p) return;
   const novoId = document.getElementById('ep-id').value.trim().toUpperCase() || p.id;
   const valorInput = parseFloat(document.getElementById('ep-valor').value);
+  const valorFinal = isNaN(valorInput) ? null : valorInput;
+
+  // Payload principal (campos que certamente existem na tabela)
   const updates = {
     descricao:   document.getElementById('ep-desc').value.trim() || p.desc,
     sala:        document.getElementById('ep-sala').value.trim() || p.sala,
     responsavel: document.getElementById('ep-resp').value.trim() || p.resp,
     status:      document.getElementById('ep-status').value,
     obs:         document.getElementById('ep-obs').value.trim() || null,
-    foto_url:    tempPhotoData || p.foto || null,
-    valor_medio: isNaN(valorInput) ? null : valorInput
+    foto_url:    tempPhotoData !== undefined ? tempPhotoData : (p.foto || null)
   };
-  // Se o ID mudou, precisa deletar e reinserir (PK não pode ser alterada via PATCH)
+
   setSyncing('syncing');
   try {
     if(novoId !== id) {
       const existe = patrimonio.find(x=>x.id===novoId);
       if(existe) { toast('❌ Código ' + novoId + ' já está em uso.','error'); setSyncing('error'); return; }
-      await sbPost('patrimonio','bens',{ id: novoId, descricao: updates.descricao, sala: updates.sala, responsavel: updates.responsavel, status: updates.status, obs: updates.obs||null, foto_url: updates.foto_url||null, dt_cadastro: p.dt||new Date().toISOString().slice(0,10), valor_medio: updates.valor_medio });
+      await sbPost('patrimonio','bens',{ id: novoId, ...updates, dt_cadastro: p.dt||new Date().toISOString().slice(0,10) });
       await sbDelete('patrimonio','bens',`id=eq.${id}`);
+      // Tenta salvar valor_medio no novo registro (ignora se coluna não existir)
+      if(valorFinal !== null) { try { await sbPatch('patrimonio','bens',`id=eq.${novoId}`,{ valor_medio: valorFinal }); } catch(e){} }
       p.id = novoId;
     } else {
       await sbPatch('patrimonio','bens',`id=eq.${id}`, updates);
+      // Tenta salvar valor_medio separadamente (ignora se coluna não existir)
+      if(valorFinal !== null) { try { await sbPatch('patrimonio','bens',`id=eq.${id}`,{ valor_medio: valorFinal }); } catch(e){} }
     }
     p.desc   = updates.descricao;
     p.sala   = updates.sala;
@@ -1281,7 +1290,7 @@ async function salvarEditPat(id) {
     p.status = updates.status;
     p.obs    = updates.obs||'';
     p.foto   = updates.foto_url;
-    p.valor  = updates.valor_medio;
+    p.valor  = valorFinal;
     renderPatrimonio(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
     toast('✅ Patrimônio atualizado!','ok');
