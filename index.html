@@ -263,6 +263,58 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
 #pz-title { font-weight: 800; font-size: 1rem; margin-bottom: 4px; }
 #pz-code  { font-size: .8rem; color: #555; margin-bottom: 6px; }
 
+
+/* ── DASHBOARD ── */
+.dash-filter-row { display: flex; gap: 8px; margin-bottom: 18px; }
+.dash-filter-btn { flex: 1; padding: 9px 0; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--surface2); color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.18s; }
+.dash-filter-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+.dash-filter-btn:hover:not(.active) { border-color: var(--orange); color: var(--orange); }
+.dash-kpi-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 18px; }
+.dash-kpi { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.dash-kpi-label { font-size: 0.7rem; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.6px; }
+.dash-kpi-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.65rem; font-weight: 700; color: var(--text); line-height: 1; }
+.dash-kpi-sub { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
+.dash-kpi.kpi-green { border-color: rgba(74,222,128,0.25); background: rgba(74,222,128,0.06); }
+.dash-kpi.kpi-green .dash-kpi-value { color: var(--green); }
+.dash-kpi.kpi-red { border-color: rgba(248,113,113,0.25); background: rgba(248,113,113,0.06); }
+.dash-kpi.kpi-red .dash-kpi-value { color: var(--red); }
+.dash-kpi.kpi-orange { border-color: rgba(234,108,26,0.25); background: rgba(234,108,26,0.06); }
+.dash-kpi.kpi-orange .dash-kpi-value { color: var(--orange); }
+.dash-kpi.kpi-blue { border-color: rgba(96,165,250,0.25); background: rgba(96,165,250,0.06); }
+.dash-kpi.kpi-blue .dash-kpi-value { color: var(--blue); }
+.dash-section { font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.38); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; margin-top: 6px; }
+.dash-chart-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+.dash-chart-title { font-size: 0.8rem; font-weight: 700; color: var(--text2); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.bar-chart { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { font-size: 0.75rem; color: var(--text2); min-width: 90px; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { flex: 1; background: rgba(255,255,255,0.07); border-radius: 4px; height: 10px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.bar-val { font-size: 0.72rem; color: var(--text3); min-width: 28px; text-align: right; font-weight: 600; }
+.donut-wrap { display: flex; align-items: center; gap: 20px; }
+.donut-svg-wrap { flex-shrink: 0; position: relative; width: 110px; height: 110px; }
+.donut-center-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.donut-center-val { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--text); line-height: 1; }
+.donut-center-sub { font-size: 0.62rem; color: var(--text3); margin-top: 2px; }
+.donut-legend { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text2); }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.legend-pct { margin-left: auto; font-weight: 700; font-size: 0.75rem; color: var(--text); }
+.rank-list { display: flex; flex-direction: column; gap: 6px; }
+.rank-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px; }
+.rank-num { font-family: 'Space Grotesk', sans-serif; font-size: 0.75rem; font-weight: 700; color: var(--text3); min-width: 18px; }
+.rank-name { flex: 1; font-size: 0.82rem; color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-qty { font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 700; color: var(--blue); }
+.backup-section { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+.backup-title { font-size: 0.8rem; font-weight: 700; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.backup-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-backup { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 14px 8px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--surface2); color: var(--text2); cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600; transition: all 0.18s; text-align: center; line-height: 1.3; }
+.btn-backup:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-soft); }
+.btn-backup .bk-icon { font-size: 1.3rem; }
+.btn-print-rel { width: 100%; margin-top: 8px; padding: 13px; font-size: 0.88rem; justify-content: center; background: linear-gradient(135deg,#e8631a,#f59e0b); border: none; color: #fff; border-radius: var(--radius-sm); cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: opacity 0.18s; }
+.btn-print-rel:hover { opacity: 0.88; }
+@media print { body > *:not(#print-relatorio) { display: none !important; } #print-relatorio { display: block !important; font-family: Arial,sans-serif; color: #000; padding: 20px; } .pr-header { text-align: center; border-bottom: 2px solid #e8631a; padding-bottom: 12px; margin-bottom: 20px; } .pr-header h1 { font-size: 1.4rem; color: #e8631a; } .pr-header p { font-size: 0.8rem; color: #555; } .pr-section-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #555; margin: 16px 0 8px; letter-spacing: 0.5px; border-left: 3px solid #e8631a; padding-left: 8px; } .pr-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 16px; } .pr-table th { background: #f5f5f5; padding: 7px 10px; text-align: left; font-size: 0.75rem; color: #333; border-bottom: 2px solid #ddd; } .pr-table td { padding: 6px 10px; border-bottom: 1px solid #eee; } .pr-footer { margin-top: 24px; text-align: center; font-size: 0.72rem; color: #aaa; border-top: 1px solid #eee; padding-top: 10px; } }
+#print-relatorio { display: none; }
 /* ── RESPONSIVE / MOBILE PORTRAIT ── */
 @media (max-width: 600px) {
   /* Layout base */
@@ -399,6 +451,10 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
     Patrimônio
   </button>
+  <button class="tab-btn" onclick="switchTab('dashboard',this);renderDashboard()" id="tab-dash" style="color:var(--yellow)">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </button>
 </div>
 
 <!-- ABA ALMOXARIFADO -->
@@ -460,6 +516,31 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
 </div>
 </div>
 
+
+<!-- ABA DASHBOARD -->
+<div class="tab-content" id="tab-dashboard">
+<div class="main">
+  <div class="dash-filter-row">
+    <button class="dash-filter-btn active" id="df-ambos" onclick="setDashFilter('ambos')">📊 Geral</button>
+    <button class="dash-filter-btn" id="df-almoxarifado" onclick="setDashFilter('almoxarifado')">📦 Almoxarifado</button>
+    <button class="dash-filter-btn" id="df-patrimonio" onclick="setDashFilter('patrimonio')">🖥 Patrimônio</button>
+  </div>
+  <div id="dash-kpis" class="dash-kpi-grid"></div>
+  <div id="dash-charts"></div>
+  <div class="dash-section">🖨 Relatório e Backup</div>
+  <button class="btn-print-rel" onclick="imprimirRelatorio()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir Relatório de Bens (PDF)</button>
+  <div class="backup-section" style="margin-top:14px">
+    <div class="backup-title"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar Backup</div>
+    <div class="backup-btns">
+      <button class="btn-backup" onclick="backupCSV('patrimonio')"><span class="bk-icon">📋</span>Bens (CSV)</button>
+      <button class="btn-backup" onclick="backupCSV('almoxarifado')"><span class="bk-icon">📦</span>Estoque (CSV)</button>
+      <button class="btn-backup" onclick="backupCSV('movimentacoes')"><span class="bk-icon">🔄</span>Movimentações (CSV)</button>
+      <button class="btn-backup" onclick="backupJSON()"><span class="bk-icon">💾</span>Backup Completo (JSON)</button>
+    </div>
+  </div>
+</div>
+</div>
+<div id="print-relatorio"></div>
 <!-- PHOTO EDITOR -->
 <div id="photo-editor-overlay">
   <div class="photo-editor-box">
@@ -553,13 +634,18 @@ async function sbPatch(schema, table, filter, body) {
 async function sbDelete(schema, table, filter) {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`, {
     method: 'DELETE',
-    headers: schemaHeaders(schema, { 'Prefer': 'return=minimal' })
+    headers: schemaHeaders(schema, { 'Prefer': 'return=representation' })
   });
   if (!r.ok) {
     const msg = await r.text();
     throw new Error(`DELETE ${table} falhou (${r.status}): ${msg}`);
   }
-  return true;
+  const deleted = await r.json();
+  // Se retornou array vazio, o RLS bloqueou silenciosamente sem erro
+  if(Array.isArray(deleted) && deleted.length === 0) {
+    throw new Error(`DELETE bloqueado pelo RLS (nenhum registro removido). Execute no Supabase SQL Editor:\n\nCREATE POLICY "allow_delete_${table}" ON almoxarifado.${table} FOR DELETE TO anon USING (true);`);
+  }
+  return deleted;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -590,7 +676,7 @@ async function initApp() {
       sbGet('patrimonio',   'bens',          'order=id.asc')
     ]);
     estoque    = itens;
-    historico  = movs.map(m => ({ dbId: m.id, dt: new Date(m.criado_em).toLocaleDateString('pt-BR'), item: m.item_nome, tipo: m.tipo, qtd: m.qtd, resp: m.responsavel, obs: m.obs||'' }));
+    historico  = movs.map(m => ({ dbId: m.id, dt: new Date(m.criado_em).toLocaleDateString('pt-BR'), item: m.item_nome, itemId: m.item_id||null, tipo: m.tipo, qtd: m.qtd, resp: m.responsavel, obs: m.obs||'' }));
     patrimonio = bens.map(b => ({ id: b.id, desc: b.descricao, sala: b.sala, resp: b.responsavel, status: b.status, obs: b.obs||'', dt: b.dt_cadastro, foto: b.foto_url||null, valor: b.valor_medio||null }));
     setSyncing('ok');
   } catch(e) {
@@ -843,13 +929,16 @@ async function salvarEditMov(idx) {
 // ════════════════════════════════════════════════════════════
 function excluirMov(idx) {
   const h = historico[idx]; if(!h) return;
-  const itemLocal = estoque.find(i => i.nome === h.item);
   const reversoTexto = h.tipo === 'Entrada'
     ? `O estoque de <strong>${h.item}</strong> será <strong>reduzido em ${h.qtd}</strong> unidade(s).`
     : `O estoque de <strong>${h.item}</strong> será <strong>acrescido em ${h.qtd}</strong> unidade(s).`;
+  const dbIdInfo = h.dbId
+    ? `<span style="color:#22c55e">✅ ID no banco: <code>${h.dbId}</code></span>`
+    : `<span style="color:#ef4444">❌ Sem ID no banco — exclusão pode falhar</span>`;
   openGenericModal('🗑 Excluir Movimentação',
-    `<p style="color:#4a5568;font-size:0.95rem;line-height:1.6">Tem certeza que deseja excluir a movimentação de <strong>${h.tipo}</strong> de <strong>${h.qtd}× ${h.item}</strong> registrada em <strong>${h.dt}</strong>?</p>
-     <p style="color:#b45309;font-size:0.82rem;margin-top:12px;padding:10px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a">↩️ ${reversoTexto}</p>`,
+    `<p style="color:var(--text2);font-size:0.92rem;line-height:1.6">Excluir movimentação de <strong>${h.tipo}</strong>: <strong>${h.qtd}× ${h.item}</strong> em <strong>${h.dt}</strong>?</p>
+     <p style="font-size:0.8rem;margin-top:10px;padding:10px;background:rgba(251,191,36,0.1);border-radius:8px;border:1px solid rgba(251,191,36,0.3);color:var(--yellow)">↩️ ${reversoTexto}</p>
+     <p style="font-size:0.75rem;margin-top:10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.10);color:var(--text3)">${dbIdInfo}</p>`,
     `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-red" onclick="confirmarExcluirMov(${idx})">🗑 Confirmar Exclusão</button>`
   );
 }
@@ -859,28 +948,76 @@ async function confirmarExcluirMov(idx) {
   setSyncing('syncing');
   document.getElementById('modal-overlay').classList.remove('open');
 
+  if(!h.dbId) {
+    setSyncing('error');
+    openGenericModal('❌ Sem ID no banco',
+      `<p style="font-size:0.9rem;color:var(--text2);line-height:1.6">Esta movimentação não tem <code>dbId</code>. Recarregue a página e tente novamente.</p>`,
+      `<button class="btn btn-ghost" onclick="closeModal()">Fechar</button>`
+    );
+    return;
+  }
+
+  // Log para diagnóstico
+  console.log('[ExcluirMov] dbId:', h.dbId, 'itemId:', h.itemId, 'item:', h.item, 'tipo:', h.tipo, 'qtd:', h.qtd);
+
   try {
-    // 1. Reverter estoque no banco
-    const item = estoque.find(i => i.nome === h.item);
+    // 1. Deletar a movimentação PRIMEIRO (antes de qualquer outro PATCH)
+    //    Isso evita que triggers na tabela de itens recriem a movimentação
+    console.log('[ExcluirMov] DELETE movimentacoes id=', h.dbId);
+    await sbDelete('almoxarifado', 'movimentacoes', `id=eq.${h.dbId}`);
+    console.log('[ExcluirMov] DELETE bem-sucedido');
+
+    // 2. Só depois reverter o estoque
+    const item = estoque.find(i => i.id === h.itemId) || estoque.find(i => i.nome === h.item);
+    console.log('[ExcluirMov] item encontrado:', item);
     if(item) {
-      const qtdFinal = Math.max(0, h.tipo === 'Entrada' ? item.qtd - h.qtd : item.qtd + h.qtd);
+      const delta = h.tipo === 'Entrada' ? -h.qtd : +h.qtd;
+      const qtdFinal = Math.max(0, item.qtd + delta);
+      console.log('[ExcluirMov] PATCH estoque →', qtdFinal);
       await sbPatch('almoxarifado', 'itens', `id=eq.${item.id}`, { qtd: qtdFinal });
       item.qtd = qtdFinal;
     }
 
-    // 2. Deletar movimentação
-    await sbDelete('almoxarifado', 'movimentacoes', `id=eq.${h.dbId}`);
-
-    historico.splice(idx, 1);
-    renderEstoque(); renderHistorico(); updateAlerts();
+    // 3. Verificar se o registro realmente foi deletado
+    try {
+      const check = await sbGet('almoxarifado', 'movimentacoes', `id=eq.${h.dbId}`);
+      if(check.length > 0) {
+        console.warn('[ExcluirMov] ⚠️ Registro ainda existe após DELETE! Possível trigger recriando-o.', check);
+        toast('⚠️ Registro ainda existe no banco após delete. Verifique triggers no Supabase.', 'error');
+      } else {
+        console.log('[ExcluirMov] ✅ Confirmado: registro removido do banco.');
+      }
+    } catch(ce) { console.warn('[ExcluirMov] não foi possível verificar:', ce); }
     setSyncing('ok');
     toast('✅ Movimentação excluída e estoque revertido!', 'ok');
+
   } catch(e) {
     setSyncing('error');
-    // Mostra o erro completo na tela para diagnóstico
+    console.error('[ExcluirMov] ERRO:', e.message);
+
+    // Detectar se é erro de RLS (permissão)
+    const isRLS = e.message.includes('42501') || e.message.includes('permission') || e.message.includes('policy');
+    const isNotFound = e.message.includes('404') || e.message.includes('PGRST116');
+
+    let dica = '';
+    if(isRLS) {
+      dica = `<div style="margin-top:12px;padding:12px;background:rgba(234,108,26,0.1);border:1px solid rgba(234,108,26,0.35);border-radius:8px;font-size:0.82rem;color:var(--text2);line-height:1.7">
+        <strong style="color:var(--orange)">🔐 Solução — Habilitar DELETE no Supabase:</strong><br>
+        1. Acesse <strong>supabase.com</strong> → seu projeto<br>
+        2. Vá em <strong>Table Editor → movimentacoes</strong><br>
+        3. Clique em <strong>Auth Policies (RLS)</strong><br>
+        4. Adicione uma policy: <code>DELETE</code> para <code>anon</code><br><br>
+        <strong>Ou cole no SQL Editor:</strong><br>
+        <code style="display:block;background:rgba(0,0,0,0.3);padding:8px;border-radius:4px;margin-top:4px;font-size:0.78rem;word-break:break-all">CREATE POLICY "allow_delete" ON almoxarifado.movimentacoes FOR DELETE TO anon USING (true);</code>
+      </div>`;
+    } else if(isNotFound) {
+      dica = `<p style="margin-top:10px;font-size:0.82rem;color:var(--text3)">A movimentação não foi encontrada no banco. Pode já ter sido excluída.</p>`;
+    } else {
+      dica = `<p style="margin-top:10px;font-size:0.82rem;color:var(--text3)">Verifique o Console do navegador (F12) para mais detalhes.</p>`;
+    }
+
     openGenericModal('❌ Erro ao excluir',
-      `<p style="color:#dc2626;font-size:0.88rem;font-family:monospace;background:#fef2f2;padding:12px;border-radius:8px;border:1px solid #fecaca;word-break:break-all">${e.message}</p>
-       <p style="color:#4a5568;font-size:0.82rem;margin-top:12px">Se o erro for <strong>42501</strong> (permission denied), é necessário habilitar DELETE via RLS no Supabase para a tabela <code>movimentacoes</code>.</p>`,
+      `<p style="font-size:0.85rem;font-family:monospace;background:rgba(248,113,113,0.1);padding:12px;border-radius:8px;border:1px solid rgba(248,113,113,0.3);word-break:break-all;color:var(--red)">${e.message}</p>${dica}`,
       `<button class="btn btn-ghost" onclick="closeModal()">Fechar</button>`
     );
   }
@@ -1127,7 +1264,7 @@ async function submitMov(tipo) {
     const newMov = await sbPost('almoxarifado','movimentacoes',{ item_id: itemId, item_nome: item.nome, tipo: tipoLabel, qtd, responsavel: resp||'Sistema', obs });
     item.qtd = novaQtd;
     const dbId = Array.isArray(newMov) ? newMov[0]?.id : newMov?.id;
-    historico.unshift({ dbId: dbId||null, dt: now(), item: item.nome, tipo: tipoLabel, qtd, resp: resp||'Sistema', obs });
+    historico.unshift({ dbId: dbId||null, dt: now(), item: item.nome, itemId: item.id, tipo: tipoLabel, qtd, resp: resp||'Sistema', obs });
     renderEstoque(); renderHistorico(); updateAlerts();
     setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
@@ -1422,7 +1559,316 @@ function removerFotoEdit() {
 // ════════════════════════════════════════════════════════════
 //  START
 // ════════════════════════════════════════════════════════════
-// Re-renderizar ao girar o celular
+// ════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════
+let dashFilter = 'ambos';
+
+function setDashFilter(f) {
+  dashFilter = f;
+  document.querySelectorAll('.dash-filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('df-'+f).classList.add('active');
+  renderDashboard();
+}
+
+function renderDashboard() {
+  renderDashKPIs();
+  renderDashCharts();
+}
+
+function renderDashKPIs() {
+  const kpiEl = document.getElementById('dash-kpis');
+  const show = dashFilter;
+  let cards = [];
+
+  if(show === 'ambos' || show === 'almoxarifado') {
+    const totalItens   = estoque.length;
+    const totalQtd     = estoque.reduce((s,i) => s + (i.qtd||0), 0);
+    const emFalta      = estoque.filter(i => i.qtd === 0).length;
+    const estoqueBaixo = estoque.filter(i => i.qtd > 0 && i.qtd < (i.minimo||1)).length;
+    const entradas     = historico.filter(h => h.tipo === 'Entrada').reduce((s,h) => s + h.qtd, 0);
+    const saidas       = historico.filter(h => h.tipo === 'Saída').reduce((s,h) => s + h.qtd, 0);
+    cards = cards.concat([
+      { label:'Itens Cadastrados', value: totalItens, sub:'no almoxarifado', cls:'kpi-blue' },
+      { label:'Unidades em Estoque', value: totalQtd, sub:'quantidade total', cls:'' },
+      { label:'Itens em Falta', value: emFalta, sub:'estoque zerado', cls: emFalta>0?'kpi-red':'' },
+      { label:'Estoque Baixo', value: estoqueBaixo, sub:'abaixo do mínimo', cls: estoqueBaixo>0?'kpi-orange':'' },
+      { label:'Total de Entradas', value: entradas, sub:'unidades registradas', cls:'kpi-green' },
+      { label:'Total de Saídas', value: saidas, sub:'unidades registradas', cls:'' },
+    ]);
+  }
+
+  if(show === 'ambos' || show === 'patrimonio') {
+    const totalBens  = patrimonio.length;
+    const ativos     = patrimonio.filter(p => p.status === 'Ativo' || p.status === 'Em Uso').length;
+    const manut      = patrimonio.filter(p => p.status === 'Em Manutenção').length;
+    const ociosos    = patrimonio.filter(p => p.status === 'Ocioso').length;
+    const comFoto    = patrimonio.filter(p => p.foto).length;
+    const valorTotal = patrimonio.reduce((s,p) => s + (p.valor||0), 0);
+    cards = cards.concat([
+      { label:'Bens Patrimoniais', value: totalBens, sub:'cadastrados', cls:'kpi-blue' },
+      { label:'Ativos / Em Uso', value: ativos, sub:'bens em operação', cls:'kpi-green' },
+      { label:'Em Manutenção', value: manut, sub:'bens parados', cls: manut>0?'kpi-red':'' },
+      { label:'Ociosos', value: ociosos, sub:'sem uso', cls: ociosos>0?'kpi-orange':'' },
+      { label:'Com Foto', value: comFoto, sub:`de ${totalBens} bens`, cls:'' },
+      { label:'Valor Total (R$)', value: valorTotal > 0 ? 'R$ '+valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}) : '—', sub:'soma dos valores médios', cls:'kpi-green', raw:true },
+    ]);
+  }
+
+  kpiEl.innerHTML = cards.map(c => `
+    <div class="dash-kpi ${c.cls||''}">
+      <div class="dash-kpi-label">${c.label}</div>
+      <div class="dash-kpi-value">${c.raw ? c.value : c.value}</div>
+      <div class="dash-kpi-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+function renderDashCharts() {
+  const el = document.getElementById('dash-charts');
+  let html = '';
+
+  // ── ALMOXARIFADO CHARTS ──
+  if(dashFilter === 'ambos' || dashFilter === 'almoxarifado') {
+    // Top 5 itens por quantidade
+    const top5 = [...estoque].sort((a,b) => (b.qtd||0)-(a.qtd||0)).slice(0,5);
+    const maxQtd = top5[0]?.qtd || 1;
+    html += `<div class="dash-section">📦 Almoxarifado</div>`;
+    html += `<div class="dash-chart-card">
+      <div class="dash-chart-title">Top 5 itens em estoque</div>
+      <div class="bar-chart">${top5.map(i => `
+        <div class="bar-row">
+          <div class="bar-label" title="${i.nome}">${i.nome}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((i.qtd/maxQtd)*100)}%;background:var(--blue)"></div></div>
+          <div class="bar-val">${i.qtd}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+    // Categorias por qtd
+    const cats = {};
+    estoque.forEach(i => { cats[i.categoria||'Outros'] = (cats[i.categoria||'Outros']||0) + (i.qtd||0); });
+    const catList = Object.entries(cats).sort((a,b) => b[1]-a[1]).slice(0,5);
+    const maxCat = catList[0]?.[1] || 1;
+    const catColors = ['#60a5fa','#4ade80','#fbbf24','#f87171','#a78bfa'];
+    html += `<div class="dash-chart-card">
+      <div class="dash-chart-title">Distribuição por Categoria</div>
+      <div class="bar-chart">${catList.map((c,i) => `
+        <div class="bar-row">
+          <div class="bar-label" title="${c[0]}">${c[0]}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((c[1]/maxCat)*100)}%;background:${catColors[i%5]}"></div></div>
+          <div class="bar-val">${c[1]}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+    // Movimentações recentes (entradas vs saídas)
+    const movPorDia = {};
+    historico.forEach(h => {
+      if(!movPorDia[h.dt]) movPorDia[h.dt] = { e:0, s:0 };
+      if(h.tipo === 'Entrada') movPorDia[h.dt].e += h.qtd;
+      else movPorDia[h.dt].s += h.qtd;
+    });
+    const dias = Object.keys(movPorDia).slice(0,7).reverse();
+    const maxMov = Math.max(1, ...dias.map(d => Math.max(movPorDia[d].e, movPorDia[d].s)));
+    if(dias.length > 0) {
+      html += `<div class="dash-chart-card">
+        <div class="dash-chart-title">Movimentações Recentes <span>(últimos registros)</span></div>
+        <div style="display:flex;gap:12px;margin-bottom:8px">
+          <span style="font-size:0.72rem;color:var(--green);font-weight:700">▬ Entradas</span>
+          <span style="font-size:0.72rem;color:var(--red);font-weight:700">▬ Saídas</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end;height:64px">
+          ${dias.map(d => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end">
+              <div style="width:100%;display:flex;gap:2px;align-items:flex-end;height:54px;justify-content:center">
+                <div style="width:45%;background:var(--green);opacity:0.8;border-radius:2px 2px 0 0;height:${Math.round((movPorDia[d].e/maxMov)*54)}px;min-height:${movPorDia[d].e>0?'4':'0'}px"></div>
+                <div style="width:45%;background:var(--red);opacity:0.8;border-radius:2px 2px 0 0;height:${Math.round((movPorDia[d].s/maxMov)*54)}px;min-height:${movPorDia[d].s>0?'4':'0'}px"></div>
+              </div>
+              <div style="font-size:0.58rem;color:var(--text3);white-space:nowrap">${d.slice(0,5)}</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  }
+
+  // ── PATRIMÔNIO CHARTS ──
+  if(dashFilter === 'ambos' || dashFilter === 'patrimonio') {
+    html += `<div class="dash-section">🖥 Patrimônio</div>`;
+
+    // Donut de status
+    const statusMap = { 'Ativo':0, 'Em Uso':0, 'Em Manutenção':0, 'Ocioso':0 };
+    patrimonio.forEach(p => { statusMap[p.status] = (statusMap[p.status]||0)+1; });
+    const total = patrimonio.length || 1;
+    const statusColors = { 'Ativo':'#4ade80', 'Em Uso':'#60a5fa', 'Em Manutenção':'#f87171', 'Ocioso':'#94a3b8' };
+    const statusList = Object.entries(statusMap).filter(([,v])=>v>0);
+    // SVG donut
+    let cumAngle = -90; const R=42; const cx=55; const cy=55;
+    const paths = statusList.map(([s,v]) => {
+      const pct = v/total; const angle = pct*360;
+      const start = cumAngle; cumAngle += angle;
+      const r1 = start*Math.PI/180; const r2 = cumAngle*Math.PI/180;
+      const x1=cx+R*Math.cos(r1); const y1=cy+R*Math.sin(r1);
+      const x2=cx+R*Math.cos(r2); const y2=cy+R*Math.sin(r2);
+      const laf = angle>180?1:0;
+      return `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R},0,${laf},1,${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${statusColors[s]}" opacity="0.85"/>`;
+    });
+    // Inner circle
+    const donutSVG = `<svg viewBox="0 0 110 110" width="110" height="110">${paths.join('')}<circle cx="${cx}" cy="${cy}" r="28" fill="#1e2542"/></svg>`;
+
+    html += `<div class="dash-chart-card">
+      <div class="dash-chart-title">Status dos Bens</div>
+      <div class="donut-wrap">
+        <div class="donut-svg-wrap">
+          ${donutSVG}
+          <div class="donut-center-text">
+            <div class="donut-center-val">${total}</div>
+            <div class="donut-center-sub">bens</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          ${statusList.map(([s,v]) => `
+            <div class="legend-item">
+              <div class="legend-dot" style="background:${statusColors[s]}"></div>
+              <span>${s}</span>
+              <span class="legend-pct">${v} (${Math.round(v/total*100)}%)</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+    // Ranking por local/sala
+    const porSala = {};
+    patrimonio.forEach(p => { porSala[p.sala||'—'] = (porSala[p.sala||'—']||0)+1; });
+    const salaList = Object.entries(porSala).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    const maxSala = salaList[0]?.[1]||1;
+    html += `<div class="dash-chart-card">
+      <div class="dash-chart-title">Bens por Local / Sala</div>
+      <div class="bar-chart">${salaList.map(([s,v]) => `
+        <div class="bar-row">
+          <div class="bar-label" title="${s}">${s}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/maxSala)*100)}%;background:var(--orange)"></div></div>
+          <div class="bar-val">${v}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+    // Top bens por valor
+    const comValor = patrimonio.filter(p=>p.valor>0).sort((a,b)=>(b.valor||0)-(a.valor||0)).slice(0,5);
+    if(comValor.length > 0) {
+      html += `<div class="dash-chart-card">
+        <div class="dash-chart-title">Top Bens por Valor Médio</div>
+        <div class="rank-list">${comValor.map((p,i) => `
+          <div class="rank-item">
+            <div class="rank-num">#${i+1}</div>
+            <div class="rank-name">${p.desc}</div>
+            <div class="rank-qty" style="color:var(--green)">R$ ${Number(p.valor).toLocaleString('pt-BR',{minimumFractionDigits:0})}</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  }
+
+  el.innerHTML = html || '<p style="color:var(--text3);font-size:0.88rem;text-align:center;padding:20px">Nenhum dado para exibir.</p>';
+}
+
+// ════════════════════════════════════════════════════════════
+//  IMPRIMIR RELATÓRIO DE BENS (PDF via print)
+// ════════════════════════════════════════════════════════════
+function imprimirRelatorio() {
+  const dtStr = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const rows = patrimonio.map(p => `
+    <tr>
+      <td>${p.id}</td>
+      <td>${p.desc}</td>
+      <td>${p.sala}</td>
+      <td>${p.resp}</td>
+      <td>${p.status}</td>
+      <td>${p.valor != null ? 'R$ '+Number(p.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—'}</td>
+      <td>${p.dt||'—'}</td>
+    </tr>`).join('');
+
+  // Resumo estatístico
+  const totalBens   = patrimonio.length;
+  const ativos      = patrimonio.filter(p=>p.status==='Ativo'||p.status==='Em Uso').length;
+  const manut       = patrimonio.filter(p=>p.status==='Em Manutenção').length;
+  const ociosos     = patrimonio.filter(p=>p.status==='Ocioso').length;
+  const valorTotal  = patrimonio.reduce((s,p)=>s+(p.valor||0),0);
+
+  document.getElementById('print-relatorio').innerHTML = `
+    <div class="pr-header">
+      <h1>Relatório de Bens Patrimoniais</h1>
+      <p>BERTONI &nbsp;|&nbsp; Emitido em: ${dtStr}</p>
+    </div>
+    <div class="pr-section-title">Resumo Geral</div>
+    <table class="pr-table">
+      <thead><tr><th>Total de Bens</th><th>Ativos / Em Uso</th><th>Em Manutenção</th><th>Ociosos</th><th>Valor Total (R$)</th></tr></thead>
+      <tbody><tr><td>${totalBens}</td><td>${ativos}</td><td>${manut}</td><td>${ociosos}</td><td>${valorTotal>0?'R$ '+valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</td></tr></tbody>
+    </table>
+    <div class="pr-section-title">Listagem Completa de Bens</div>
+    <table class="pr-table">
+      <thead><tr><th>Código</th><th>Descrição</th><th>Local / Sala</th><th>Responsável</th><th>Status</th><th>Valor Médio</th><th>Cadastro</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="pr-footer">Sistema de Controle Interno Bertoni &nbsp;·&nbsp; Desenvolvido por Leandro Machado</div>`;
+
+  setTimeout(() => window.print(), 120);
+}
+
+// ════════════════════════════════════════════════════════════
+//  BACKUP / EXPORTAÇÃO
+// ════════════════════════════════════════════════════════════
+function downloadFile(name, content, type='text/csv;charset=utf-8') {
+  const blob = new Blob(['\ufeff'+content], { type });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function backupCSV(tipo) {
+  let csv='', fname='';
+  const dt = new Date().toISOString().slice(0,10);
+
+  if(tipo === 'patrimonio') {
+    fname = `bens_${dt}.csv`;
+    csv = 'Código,Descrição,Local/Sala,Responsável,Status,Valor Médio,Dt Cadastro,Observações\n';
+    csv += patrimonio.map(p =>
+      [p.id, p.desc, p.sala, p.resp, p.status,
+       p.valor!=null?Number(p.valor).toFixed(2):'',
+       p.dt||'', (p.obs||'').replace(/,/g,';')].join(',')
+    ).join('\n');
+  } else if(tipo === 'almoxarifado') {
+    fname = `estoque_${dt}.csv`;
+    csv = 'Código,Item,Categoria,Quantidade,Unidade,Local,Mínimo\n';
+    csv += estoque.map(i =>
+      [i.id, i.nome, i.categoria||'', i.qtd, i.un||'', i.local||'', i.minimo||0].join(',')
+    ).join('\n');
+  } else if(tipo === 'movimentacoes') {
+    fname = `movimentacoes_${dt}.csv`;
+    csv = 'Data,Item,Tipo,Quantidade,Responsável,Observações\n';
+    csv += historico.map(h =>
+      [h.dt, h.item, h.tipo, h.qtd, h.resp, (h.obs||'').replace(/,/g,';')].join(',')
+    ).join('\n');
+  }
+
+  downloadFile(fname, csv);
+  toast(`✅ Arquivo ${fname} exportado!`, 'ok');
+}
+
+function backupJSON() {
+  const dt = new Date().toISOString().slice(0,10);
+  const data = {
+    gerado_em: new Date().toISOString(),
+    patrimonio: patrimonio,
+    estoque: estoque,
+    movimentacoes: historico
+  };
+  downloadFile(`backup_completo_${dt}.json`, JSON.stringify(data, null, 2), 'application/json');
+  toast('✅ Backup completo exportado!', 'ok');
+}
+
+
 let _resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
