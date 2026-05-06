@@ -91,6 +91,19 @@ body { font-family: 'DM Sans', sans-serif; background: linear-gradient(160deg, #
 .photo-editor-btns { display: flex; gap: 8px; }
 .photo-editor-btns .btn { flex: 1; justify-content: center; font-size: 0.82rem; }
 
+/* ── CROP ── */
+.crop-toggle-row { display: flex; gap: 8px; align-items: center; margin-bottom: 2px; }
+.btn-crop-toggle { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); border-radius: var(--radius-sm); padding: 6px 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; flex: 1; text-align: center; }
+.btn-crop-toggle.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-crop-apply { background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; display: none; }
+.btn-crop-apply.visible { display: block; }
+.crop-hint { font-size: 0.72rem; color: rgba(255,255,255,0.4); text-align: center; display: none; margin-top: 2px; }
+.crop-hint.visible { display: block; }
+.photo-editor-canvas-wrap { position: relative; cursor: default; }
+.photo-editor-canvas-wrap.crop-mode { cursor: crosshair; }
+#crop-overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none; border-radius: 10px; }
+#crop-overlay-canvas.active { display: block; pointer-events: all; cursor: crosshair; }
+
 #loading-overlay p { font-size: 0.9rem; color: var(--text2); font-weight: 500; }
 #loading-overlay.hidden { display: none; }
 
@@ -545,7 +558,12 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
 <div id="photo-editor-overlay">
   <div class="photo-editor-box">
     <div class="photo-editor-title">✂️ Ajustar Foto</div>
-    <div class="photo-editor-canvas-wrap"><canvas id="photo-editor-canvas"></canvas></div>
+    <div class="photo-editor-canvas-wrap" id="pe-canvas-wrap"><canvas id="photo-editor-canvas"></canvas><canvas id="crop-overlay-canvas"></canvas></div>
+    <div class="crop-toggle-row">
+      <button class="btn-crop-toggle" id="btn-crop-toggle" onclick="peCropToggle()">✂️ Recortar</button>
+      <button class="btn-crop-apply" id="btn-crop-apply" onclick="peCropApply()">✅ Aplicar Corte</button>
+    </div>
+    <div class="crop-hint" id="crop-hint">Arraste na imagem para selecionar a área de corte</div>
     <div class="photo-editor-controls">
       <div class="photo-editor-row"><label>Girar</label><input type="range" id="pe-rotate" min="-180" max="180" value="0" oninput="peUpdate()"><span id="pe-rotate-val">0°</span></div>
       <div class="photo-editor-row"><label>Zoom</label><input type="range" id="pe-zoom" min="50" max="200" value="100" oninput="peUpdate()"><span id="pe-zoom-val">100%</span></div>
@@ -1155,8 +1173,12 @@ function abrirEditorFotoComImagem(img, previewId) {
   document.getElementById('pe-bright').value  = 0;
   document.getElementById('pe-contrast').value= 0;
   peFlipped = false;
+  // Garantir que o modo de recorte esteja desativado
+  if(peCropMode) peCropModeOff();
   document.getElementById('photo-editor-overlay').classList.add('open');
   peUpdate();
+  // Sincronizar overlay após render
+  requestAnimationFrame(() => peSyncOverlay());
 }
 
 function peUpdate() {
@@ -1194,6 +1216,8 @@ function peUpdate() {
   ctx.restore();
   // Brilho e contraste via filter
   canvas.style.filter = `brightness(${100+bright}%) contrast(${100+contrast}%)`;
+  // Manter overlay sincronizado
+  if(typeof peSyncOverlay === 'function') peSyncOverlay();
 }
 
 function peFlipH() {
@@ -1210,7 +1234,190 @@ function peReset() {
   peUpdate();
 }
 
+// ════════════════════════════════════════════════════════════
+//  CROP (RECORTE)
+// ════════════════════════════════════════════════════════════
+let peCropMode = false;
+let peCropStart = null;
+let peCropRect  = null; // {x,y,w,h} em pixels do canvas principal
+
+function peCropToggle() {
+  peCropMode = !peCropMode;
+  const toggleBtn = document.getElementById('btn-crop-toggle');
+  const applyBtn  = document.getElementById('btn-crop-apply');
+  const hint      = document.getElementById('crop-hint');
+  const overlay   = document.getElementById('crop-overlay-canvas');
+  const wrap      = document.getElementById('pe-canvas-wrap');
+
+  if(peCropMode) {
+    toggleBtn.classList.add('active');
+    toggleBtn.textContent = '✖ Cancelar Recorte';
+    applyBtn.classList.add('visible');
+    hint.classList.add('visible');
+    overlay.classList.add('active');
+    wrap.classList.add('crop-mode');
+    peCropRect = null;
+    peCropStart = null;
+    peSyncOverlay();
+    peCropDraw();
+    peCropBindEvents();
+  } else {
+    peCropModeOff();
+  }
+}
+
+function peCropModeOff() {
+  peCropMode = false;
+  peCropRect = null;
+  peCropStart = null;
+  document.getElementById('btn-crop-toggle').classList.remove('active');
+  document.getElementById('btn-crop-toggle').textContent = '✂️ Recortar';
+  document.getElementById('btn-crop-apply').classList.remove('visible');
+  document.getElementById('crop-hint').classList.remove('visible');
+  const overlay = document.getElementById('crop-overlay-canvas');
+  overlay.classList.remove('active');
+  document.getElementById('pe-canvas-wrap').classList.remove('crop-mode');
+  peCropUnbindEvents();
+}
+
+function peSyncOverlay() {
+  const canvas  = document.getElementById('photo-editor-canvas');
+  const overlay = document.getElementById('crop-overlay-canvas');
+  overlay.width  = canvas.width;
+  overlay.height = canvas.height;
+  // Match rendered size
+  overlay.style.width  = canvas.offsetWidth  + 'px';
+  overlay.style.height = canvas.offsetHeight + 'px';
+}
+
+function peCropDraw() {
+  const overlay = document.getElementById('crop-overlay-canvas');
+  const ctx = overlay.getContext('2d');
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  if(!peCropRect || peCropRect.w === 0 || peCropRect.h === 0) {
+    // Dica: nenhuma seleção ainda — mostrar moldura tracejada leve
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.setLineDash([6,4]);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(8, 8, overlay.width-16, overlay.height-16);
+    ctx.setLineDash([]);
+    return;
+  }
+  const {x,y,w,h} = normRect(peCropRect);
+  // Escurecer fora da seleção
+  ctx.fillStyle = 'rgba(0,0,0,0.52)';
+  ctx.fillRect(0, 0, overlay.width, overlay.height);
+  ctx.clearRect(x, y, w, h);
+  // Borda de seleção
+  ctx.strokeStyle = '#60a5fa';
+  ctx.setLineDash([]);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  // Alças de canto
+  const hs = 8;
+  ctx.fillStyle = '#fff';
+  [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].forEach(([cx,cy]) => {
+    ctx.fillRect(cx-hs/2, cy-hs/2, hs, hs);
+  });
+  // Linhas de terços
+  ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+  ctx.lineWidth = 0.8;
+  ctx.setLineDash([3,3]);
+  for(let i=1;i<3;i++){
+    ctx.beginPath(); ctx.moveTo(x+w*i/3, y); ctx.lineTo(x+w*i/3, y+h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y+h*i/3); ctx.lineTo(x+w, y+h*i/3); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+function normRect(r) {
+  return { x: Math.min(r.x, r.x+r.w), y: Math.min(r.y, r.y+r.h), w: Math.abs(r.w), h: Math.abs(r.h) };
+}
+
+function getCanvasPos(e, overlay) {
+  const rect = overlay.getBoundingClientRect();
+  const touch = e.touches ? e.touches[0] : e;
+  const scaleX = overlay.width  / rect.width;
+  const scaleY = overlay.height / rect.height;
+  return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+}
+
+function _cropPointerDown(e) {
+  e.preventDefault();
+  peSyncOverlay();
+  const pos = getCanvasPos(e, document.getElementById('crop-overlay-canvas'));
+  peCropStart = pos;
+  peCropRect  = { x: pos.x, y: pos.y, w: 0, h: 0 };
+}
+function _cropPointerMove(e) {
+  if(!peCropStart) return;
+  e.preventDefault();
+  const pos = getCanvasPos(e, document.getElementById('crop-overlay-canvas'));
+  peCropRect = { x: peCropStart.x, y: peCropStart.y, w: pos.x - peCropStart.x, h: pos.y - peCropStart.y };
+  peCropDraw();
+}
+function _cropPointerUp(e) {
+  if(!peCropStart) return;
+  peCropStart = null;
+  peCropDraw();
+}
+
+function peCropBindEvents() {
+  const ov = document.getElementById('crop-overlay-canvas');
+  ov.addEventListener('mousedown',  _cropPointerDown);
+  ov.addEventListener('mousemove',  _cropPointerMove);
+  ov.addEventListener('mouseup',    _cropPointerUp);
+  ov.addEventListener('touchstart', _cropPointerDown, {passive:false});
+  ov.addEventListener('touchmove',  _cropPointerMove, {passive:false});
+  ov.addEventListener('touchend',   _cropPointerUp);
+}
+function peCropUnbindEvents() {
+  const ov = document.getElementById('crop-overlay-canvas');
+  ov.removeEventListener('mousedown',  _cropPointerDown);
+  ov.removeEventListener('mousemove',  _cropPointerMove);
+  ov.removeEventListener('mouseup',    _cropPointerUp);
+  ov.removeEventListener('touchstart', _cropPointerDown);
+  ov.removeEventListener('touchmove',  _cropPointerMove);
+  ov.removeEventListener('touchend',   _cropPointerUp);
+}
+
+function peCropApply() {
+  if(!peCropRect) { toast('⚠️ Selecione uma área para recortar.','error'); return; }
+  const {x, y, w, h} = normRect(peCropRect);
+  if(w < 10 || h < 10) { toast('⚠️ Seleção muito pequena.','error'); return; }
+
+  const mainCanvas = document.getElementById('photo-editor-canvas');
+  const bright   = parseInt(document.getElementById('pe-bright').value)||0;
+  const contrast = parseInt(document.getElementById('pe-contrast').value)||0;
+
+  // Criar canvas com a área recortada
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width  = Math.round(w);
+  cropCanvas.height = Math.round(h);
+  const cctx = cropCanvas.getContext('2d');
+  cctx.filter = `brightness(${100+bright}%) contrast(${100+contrast}%)`;
+  cctx.drawImage(mainCanvas, x, y, w, h, 0, 0, w, h);
+
+  // Transformar o recorte numa nova imagem e reabrir o editor
+  const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.9);
+  const newImg = new Image();
+  newImg.onload = () => {
+    peCropModeOff();
+    peSourceImage = newImg;
+    // Resetar controles
+    document.getElementById('pe-rotate').value  = 0;
+    document.getElementById('pe-zoom').value    = 100;
+    document.getElementById('pe-bright').value  = 0;
+    document.getElementById('pe-contrast').value= 0;
+    peFlipped = false;
+    peUpdate();
+    toast('✅ Recorte aplicado! Ajuste e confirme.', 'ok');
+  };
+  newImg.src = croppedDataUrl;
+}
+
 function peCancelar() {
+  if(peCropMode) peCropModeOff();
   document.getElementById('photo-editor-overlay').classList.remove('open');
 }
 
