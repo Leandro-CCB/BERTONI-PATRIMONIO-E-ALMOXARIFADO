@@ -550,6 +550,12 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
       <button class="btn-backup" onclick="backupCSV('movimentacoes')"><span class="bk-icon">🔄</span>Movimentações (CSV)</button>
       <button class="btn-backup" onclick="backupJSON()"><span class="bk-icon">💾</span>Backup Completo (JSON)</button>
     </div>
+    <div class="backup-title" style="margin-top:14px"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 9V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4"/><polyline points="17 14 12 9 7 14"/><line x1="12" y1="9" x2="12" y2="21"/></svg> Restaurar Backup</div>
+    <div class="backup-btns">
+      <button class="btn-backup" onclick="document.getElementById('restore-file-input').click()"><span class="bk-icon">📂</span>Importar Backup (JSON)</button>
+      <input type="file" id="restore-file-input" accept="application/json" style="display:none" onchange="handleRestoreFile(event)">
+    </div>
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:6px">Último backup automático: <span id="last-backup-label">—</span></div>
   </div>
 </div>
 </div>
@@ -599,8 +605,8 @@ tbody tr:hover td { background: rgba(234,108,26,0.08); }
 // ════════════════════════════════════════════════════════════
 //  SUPABASE CONFIG
 // ════════════════════════════════════════════════════════════
-const SUPA_URL  = 'https://sayagmwiuxznmcazzftb.supabase.co';
-const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWFnbXdpdXh6bm1jYXp6ZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg4NDksImV4cCI6MjA5MjQ0NDg0OX0.eTPVg0c757QDvs5UBCsxCkJCNYBBEZA9A7KbQSbp9ug';
+const SUPA_URL  = 'https://fyggsslndwsguavhduly.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5Z2dzc2xuZHdzZ3VhdmhkdWx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzYyNDksImV4cCI6MjA5MTc1MjI0OX0.xxoROa9LNFBgSitG_sEP4IknAzIU7vxZuinRC_P0Lh4';
 
 const HEADERS = {
   'Content-Type': 'application/json',
@@ -661,7 +667,7 @@ async function sbDelete(schema, table, filter) {
   const deleted = await r.json();
   // Se retornou array vazio, o RLS bloqueou silenciosamente sem erro
   if(Array.isArray(deleted) && deleted.length === 0) {
-    throw new Error(`DELETE bloqueado pelo RLS (nenhum registro removido). Execute no Supabase SQL Editor:\n\nCREATE POLICY "allow_delete_${table}" ON almoxarifado.${table} FOR DELETE TO anon USING (true);`);
+    throw new Error(`DELETE bloqueado pelo RLS (nenhum registro removido). Execute no Supabase SQL Editor:\n\nCREATE POLICY "allow_delete_${table}" ON public."${table}" FOR DELETE TO anon USING (true);`);
   }
   return deleted;
 }
@@ -689,9 +695,9 @@ function setSyncing(v) {
 async function initApp() {
   try {
     const [itens, movs, bens] = await Promise.all([
-      sbGet('almoxarifado', 'itens', 'order=id.asc'),
-      sbGet('almoxarifado', 'movimentacoes', 'order=criado_em.desc&limit=30'),
-      sbGet('patrimonio',   'bens',          'order=id.asc')
+      sbGet('public', 'BertoniPatrimonio_Itens', 'order=id.asc'),
+      sbGet('public', 'BertoniPatrimonio_Movimentacoes', 'order=criado_em.desc&limit=30'),
+      sbGet('public', 'BertoniPatrimonio_bens',          'order=id.asc')
     ]);
     estoque    = itens;
     historico  = movs.map(m => ({ dbId: m.id, dt: new Date(m.criado_em).toLocaleDateString('pt-BR'), item: m.item_nome, itemId: m.item_id||null, tipo: m.tipo, qtd: m.qtd, resp: m.responsavel, obs: m.obs||'' }));
@@ -728,7 +734,7 @@ function switchTab(name, btn) {
 async function nextAlmId() {
   const override = parseInt(localStorage.getItem('alm_seq_override')||'0');
   if(override > 0) { localStorage.removeItem('alm_seq_override'); return 'ALM-' + String(override).padStart(3,'0'); }
-  const all = await sbGet('almoxarifado','itens','select=id&order=id.desc&limit=1');
+  const all = await sbGet('public', 'BertoniPatrimonio_Itens','select=id&order=id.desc&limit=1');
   if(!all.length) return 'ALM-001';
   const n = parseInt(all[0].id.replace('ALM-',''))||0;
   return 'ALM-' + String(n+1).padStart(3,'0');
@@ -736,7 +742,7 @@ async function nextAlmId() {
 async function nextPatId() {
   const override = parseInt(localStorage.getItem('pat_seq_override')||'0');
   if(override > 0) { localStorage.removeItem('pat_seq_override'); return 'PAT-' + String(override).padStart(4,'0'); }
-  const all = await sbGet('patrimonio','bens','select=id&order=id.desc&limit=1');
+  const all = await sbGet('public', 'BertoniPatrimonio_bens','select=id&order=id.desc&limit=1');
   if(!all.length) return 'PAT-0001';
   const n = parseInt(all[0].id.replace('PAT-',''))||0;
   return 'PAT-' + String(n+1).padStart(4,'0');
@@ -749,9 +755,9 @@ async function abrirConfigSequencia() {
   // Buscar último ID existente de cada tipo
   let ultimoAlm = '—', ultimoPat = '—';
   try {
-    const ra = await sbGet('almoxarifado','itens','select=id&order=id.desc&limit=1');
+    const ra = await sbGet('public', 'BertoniPatrimonio_Itens','select=id&order=id.desc&limit=1');
     if(ra.length) ultimoAlm = ra[0].id;
-    const rp = await sbGet('patrimonio','bens','select=id&order=id.desc&limit=1');
+    const rp = await sbGet('public', 'BertoniPatrimonio_bens','select=id&order=id.desc&limit=1');
     if(rp.length) ultimoPat = rp[0].id;
   } catch(e) {}
   const almN = ultimoAlm !== '—' ? parseInt(ultimoAlm.replace('ALM-',''))+1 : 1;
@@ -934,7 +940,7 @@ async function salvarEditMov(idx) {
   const obs  = document.getElementById('em-obs').value.trim();
   setSyncing('syncing');
   try {
-    if(h.dbId) await sbPatch('almoxarifado','movimentacoes',`id=eq.${h.dbId}`,{ tipo, qtd, responsavel: resp, obs });
+    if(h.dbId) await sbPatch('public', 'BertoniPatrimonio_Movimentacoes',`id=eq.${h.dbId}`,{ tipo, qtd, responsavel: resp, obs });
     historico[idx] = { ...h, tipo, qtd, resp, obs };
     renderHistorico(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
@@ -982,7 +988,7 @@ async function confirmarExcluirMov(idx) {
     // 1. Deletar a movimentação PRIMEIRO (antes de qualquer outro PATCH)
     //    Isso evita que triggers na tabela de itens recriem a movimentação
     console.log('[ExcluirMov] DELETE movimentacoes id=', h.dbId);
-    await sbDelete('almoxarifado', 'movimentacoes', `id=eq.${h.dbId}`);
+    await sbDelete('public', 'BertoniPatrimonio_Movimentacoes', `id=eq.${h.dbId}`);
     console.log('[ExcluirMov] DELETE bem-sucedido');
 
     // 2. Só depois reverter o estoque
@@ -992,13 +998,13 @@ async function confirmarExcluirMov(idx) {
       const delta = h.tipo === 'Entrada' ? -h.qtd : +h.qtd;
       const qtdFinal = Math.max(0, item.qtd + delta);
       console.log('[ExcluirMov] PATCH estoque →', qtdFinal);
-      await sbPatch('almoxarifado', 'itens', `id=eq.${item.id}`, { qtd: qtdFinal });
+      await sbPatch('public', 'BertoniPatrimonio_Itens', `id=eq.${item.id}`, { qtd: qtdFinal });
       item.qtd = qtdFinal;
     }
 
     // 3. Verificar se o registro realmente foi deletado
     try {
-      const check = await sbGet('almoxarifado', 'movimentacoes', `id=eq.${h.dbId}`);
+      const check = await sbGet('public', 'BertoniPatrimonio_Movimentacoes', `id=eq.${h.dbId}`);
       if(check.length > 0) {
         console.warn('[ExcluirMov] ⚠️ Registro ainda existe após DELETE! Possível trigger recriando-o.', check);
         toast('⚠️ Registro ainda existe no banco após delete. Verifique triggers no Supabase.', 'error');
@@ -1026,7 +1032,7 @@ async function confirmarExcluirMov(idx) {
         3. Clique em <strong>Auth Policies (RLS)</strong><br>
         4. Adicione uma policy: <code>DELETE</code> para <code>anon</code><br><br>
         <strong>Ou cole no SQL Editor:</strong><br>
-        <code style="display:block;background:rgba(0,0,0,0.3);padding:8px;border-radius:4px;margin-top:4px;font-size:0.78rem;word-break:break-all">CREATE POLICY "allow_delete" ON almoxarifado.movimentacoes FOR DELETE TO anon USING (true);</code>
+        <code style="display:block;background:rgba(0,0,0,0.3);padding:8px;border-radius:4px;margin-top:4px;font-size:0.78rem;word-break:break-all">CREATE POLICY "allow_delete" ON public."BertoniPatrimonio_Movimentacoes" FOR DELETE TO anon USING (true);</code>
       </div>`;
     } else if(isNotFound) {
       dica = `<p style="margin-top:10px;font-size:0.82rem;color:var(--text3)">A movimentação não foi encontrada no banco. Pode já ter sido excluída.</p>`;
@@ -1467,8 +1473,8 @@ async function submitMov(tipo) {
   const tipoLabel = tipo==='entrada'?'Entrada':'Saída';
   setSyncing('syncing');
   try {
-    await sbPatch('almoxarifado','itens',`id=eq.${itemId}`,{ qtd: novaQtd });
-    const newMov = await sbPost('almoxarifado','movimentacoes',{ item_id: itemId, item_nome: item.nome, tipo: tipoLabel, qtd, responsavel: resp||'Sistema', obs });
+    await sbPatch('public', 'BertoniPatrimonio_Itens',`id=eq.${itemId}`,{ qtd: novaQtd });
+    const newMov = await sbPost('public', 'BertoniPatrimonio_Movimentacoes',{ item_id: itemId, item_nome: item.nome, tipo: tipoLabel, qtd, responsavel: resp||'Sistema', obs });
     item.qtd = novaQtd;
     const dbId = Array.isArray(newMov) ? newMov[0]?.id : newMov?.id;
     historico.unshift({ dbId: dbId||null, dt: now(), item: item.nome, itemId: item.id, tipo: tipoLabel, qtd, resp: resp||'Sistema', obs });
@@ -1494,7 +1500,7 @@ async function submitAddAlm() {
   try {
     const id = await nextAlmId();
     const novo = { id, nome, categoria: cat, qtd, un, local, minimo: min, foto_url: tempPhotoData||null };
-    await sbPost('almoxarifado','itens', novo);
+    await sbPost('public', 'BertoniPatrimonio_Itens', novo);
     estoque.push({ id, nome, categoria: cat, qtd, un, local, minimo: min, foto: tempPhotoData||null });
     renderEstoque(); updateAlerts(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
@@ -1518,9 +1524,9 @@ async function submitAddPat() {
     const id = await nextPatId();
     const dtHoje = new Date().toISOString().slice(0,10);
     // Payload principal sem valor_medio (que pode não existir ainda no banco)
-    await sbPost('patrimonio','bens',{ id, descricao: desc, sala: sala||'—', responsavel: resp||'—', status, obs: obs||null, foto_url: tempPhotoData||null, dt_cadastro: dtHoje });
+    await sbPost('public', 'BertoniPatrimonio_bens',{ id, descricao: desc, sala: sala||'—', responsavel: resp||'—', status, obs: obs||null, foto_url: tempPhotoData||null, dt_cadastro: dtHoje });
     // Tenta salvar valor_medio separadamente (ignora erro se coluna não existir)
-    if(valor !== null) { try { await sbPatch('patrimonio','bens',`id=eq.${id}`,{ valor_medio: valor }); } catch(e){} }
+    if(valor !== null) { try { await sbPatch('public', 'BertoniPatrimonio_bens',`id=eq.${id}`,{ valor_medio: valor }); } catch(e){} }
     patrimonio.push({ id, desc, sala: sala||'—', resp: resp||'—', status, obs, dt: dtHoje, foto: tempPhotoData||null, valor });
     renderPatrimonio(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
@@ -1551,7 +1557,7 @@ async function salvarEditAlm(id) {
   };
   setSyncing('syncing');
   try {
-    await sbPatch('almoxarifado','itens',`id=eq.${id}`, updates);
+    await sbPatch('public', 'BertoniPatrimonio_Itens',`id=eq.${id}`, updates);
     Object.assign(item, updates);
     renderEstoque(); updateAlerts(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
@@ -1575,7 +1581,7 @@ async function executarExcluirAlm(id) {
   if(document.getElementById('confirm-excluir-id').value.trim() !== item.id) { toast('❌ Código incorreto.','error'); return; }
   setSyncing('syncing');
   try {
-    await sbDelete('almoxarifado','itens',`id=eq.${id}`);
+    await sbDelete('public', 'BertoniPatrimonio_Itens',`id=eq.${id}`);
     estoque = estoque.filter(x=>x.id!==id);
     renderEstoque(); updateAlerts(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
@@ -1618,15 +1624,15 @@ async function salvarEditPat(id) {
     if(novoId !== id) {
       const existe = patrimonio.find(x=>x.id===novoId);
       if(existe) { toast('❌ Código ' + novoId + ' já está em uso.','error'); setSyncing('error'); return; }
-      await sbPost('patrimonio','bens',{ id: novoId, ...updates, dt_cadastro: p.dt||new Date().toISOString().slice(0,10) });
-      await sbDelete('patrimonio','bens',`id=eq.${id}`);
+      await sbPost('public', 'BertoniPatrimonio_bens',{ id: novoId, ...updates, dt_cadastro: p.dt||new Date().toISOString().slice(0,10) });
+      await sbDelete('public', 'BertoniPatrimonio_bens',`id=eq.${id}`);
       // Tenta salvar valor_medio no novo registro (ignora se coluna não existir)
-      if(valorFinal !== null) { try { await sbPatch('patrimonio','bens',`id=eq.${novoId}`,{ valor_medio: valorFinal }); } catch(e){} }
+      if(valorFinal !== null) { try { await sbPatch('public', 'BertoniPatrimonio_bens',`id=eq.${novoId}`,{ valor_medio: valorFinal }); } catch(e){} }
       p.id = novoId;
     } else {
-      await sbPatch('patrimonio','bens',`id=eq.${id}`, updates);
+      await sbPatch('public', 'BertoniPatrimonio_bens',`id=eq.${id}`, updates);
       // Tenta salvar valor_medio separadamente (ignora se coluna não existir)
-      if(valorFinal !== null) { try { await sbPatch('patrimonio','bens',`id=eq.${id}`,{ valor_medio: valorFinal }); } catch(e){} }
+      if(valorFinal !== null) { try { await sbPatch('public', 'BertoniPatrimonio_bens',`id=eq.${id}`,{ valor_medio: valorFinal }); } catch(e){} }
     }
     p.desc   = updates.descricao;
     p.sala   = updates.sala;
@@ -1657,7 +1663,7 @@ async function executarExcluirPat(id) {
   if(document.getElementById('confirm-excluir-pat-id').value.trim().toUpperCase() !== p.id) { toast('❌ Código incorreto.','error'); return; }
   setSyncing('syncing');
   try {
-    await sbDelete('patrimonio','bens',`id=eq.${id}`);
+    await sbDelete('public', 'BertoniPatrimonio_bens',`id=eq.${id}`);
     patrimonio = patrimonio.filter(x=>x.id!==id);
     renderPatrimonio(); setSyncing('ok');
     document.getElementById('modal-overlay').classList.remove('open');
@@ -2076,13 +2082,95 @@ function backupJSON() {
 }
 
 
+// ════════════════════════════════════════════════════════════
+//  RESTAURAR BACKUP (JSON gerado por backupJSON)
+// ════════════════════════════════════════════════════════════
+async function handleRestoreFile(ev) {
+  const file = ev.target.files[0];
+  ev.target.value = ''; // permite selecionar o mesmo arquivo de novo depois
+  if (!file) return;
+
+  if (!confirm('Isso vai REINSERIR os registros do backup no banco atual (sem apagar o que já existe). Itens com o mesmo código serão ignorados (não duplicados). Continuar?')) return;
+
+  try {
+    setSyncing('syncing');
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    let ok = 0, skip = 0, fail = 0;
+
+    // Itens primeiro (movimentações referenciam item_id)
+    for (const i of (data.estoque || [])) {
+      try {
+        await sbPost('public', 'BertoniPatrimonio_Itens', {
+          id: i.id, nome: i.nome, categoria: i.categoria || null,
+          qtd: i.qtd || 0, un: i.un || null, local: i.local || null,
+          minimo: i.minimo || 0, foto_url: i.foto || i.foto_url || null
+        });
+        ok++;
+      } catch (e) { skip++; }
+    }
+
+    // Bens (patrimônio)
+    for (const p of (data.patrimonio || [])) {
+      try {
+        await sbPost('public', 'BertoniPatrimonio_bens', {
+          id: p.id, descricao: p.desc || p.descricao, sala: p.sala,
+          responsavel: p.resp || p.responsavel, status: p.status,
+          obs: p.obs || null, foto_url: p.foto || p.foto_url || null,
+          valor_medio: p.valor != null ? p.valor : null,
+          dt_cadastro: p.dt || p.dt_cadastro || new Date().toISOString().slice(0,10)
+        });
+        ok++;
+      } catch (e) { skip++; }
+    }
+
+    // Movimentações
+    for (const m of (data.movimentacoes || [])) {
+      try {
+        await sbPost('public', 'BertoniPatrimonio_Movimentacoes', {
+          item_id: m.itemId || m.item_id || null, item_nome: m.item || m.item_nome,
+          tipo: m.tipo, qtd: m.qtd, responsavel: m.resp || m.responsavel,
+          obs: m.obs || null
+        });
+        ok++;
+      } catch (e) { skip++; }
+    }
+
+    await initApp();
+    setSyncing('ok');
+    toast(`✅ Restauração concluída: ${ok} registros importados${skip ? `, ${skip} já existiam/ignorados` : ''}`, 'ok');
+  } catch (e) {
+    setSyncing('error');
+    toast('❌ Erro ao restaurar backup: ' + e.message, 'error');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  BACKUP AUTOMÁTICO LOCAL (1x por dia, ao abrir o sistema)
+// ════════════════════════════════════════════════════════════
+function checkAutoBackup() {
+  const hoje = new Date().toISOString().slice(0,10);
+  const ultimo = localStorage.getItem('berton_last_backup');
+  const lbl = document.getElementById('last-backup-label');
+  if (lbl) lbl.textContent = ultimo ? new Date(ultimo).toLocaleString('pt-BR') : 'nunca';
+
+  if (ultimo === hoje) return; // já fez backup hoje
+
+  try {
+    backupJSON();
+    localStorage.setItem('berton_last_backup', new Date().toISOString());
+    if (lbl) lbl.textContent = new Date().toLocaleString('pt-BR');
+  } catch (e) { /* silencioso */ }
+}
+
 let _resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
   _resizeTimer = setTimeout(() => { renderEstoque(); renderHistorico(); }, 150);
 });
 
-initApp();
+initApp().then(() => { setTimeout(checkAutoBackup, 1500); });
 </script>
 
 <!-- RODAPÉ -->
